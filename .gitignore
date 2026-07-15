@@ -39,3 +39,11 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# env: allow committing the example, ignore real env files
+!.env.example
+
+/lib/generated/prisma
+
+# docs
+docs/

@@ -1,0 +1,21 @@
+services:
+  postgres:
+    image: postgres:17
+    container_name: digo-academy-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: digo
+      POSTGRES_PASSWORD: digo
+      POSTGRES_DB: digo_academy
+    ports:
+      - '5432:5432'
+    volumes:
+      - digo-pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U digo -d digo_academy']
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  digo-pgdata:
