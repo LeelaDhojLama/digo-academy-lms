@@ -3,12 +3,21 @@
 import 'dotenv/config';
 import { defineConfig } from 'prisma/config';
 
+/**
+ * Prisma CLI (migrate / db push / studio) connection.
+ *
+ * Prefer DIRECT_URL when set — required for Supabase so migrations use the
+ * direct Postgres port (5432) instead of the transaction pooler (6543).
+ * Falls back to DATABASE_URL for local Docker (single URL is fine).
+ *
+ * Runtime PrismaClient still uses DATABASE_URL via the pg adapter in lib/db.ts.
+ */
 export default defineConfig({
   schema: 'prisma/schema.prisma',
   migrations: {
     path: 'prisma/migrations',
   },
   datasource: {
-    url: process.env['DATABASE_URL'],
+    url: process.env['DIRECT_URL'] ?? process.env['DATABASE_URL'],
   },
 });

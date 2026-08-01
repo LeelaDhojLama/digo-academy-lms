@@ -18,6 +18,7 @@ This repo is being built into **Digo Academy**, a Learning Management System. Be
 - **Architecture:** feature-based — `features/` (per-domain), `shared/` (common components/hooks/utils), `lib/` (db/auth/s3/google infra). Thin `app/` for routing only. Components follow **atomic design** (shadcn primitives = atoms). Code follows **SOLID + DRY**. Features never import another feature's internals; promote shared code to `shared/`.
 - **Payment/enrollment is manual** — inquiry pipeline + admin-recorded payments. **No online payment gateway.**
 - **"CMS" = the admin area** of this same app (one Next.js app, role-gated dashboards: student/instructor/admin).
+- **Admin is a super-user** — admins can **manage every entity in the system** (create/edit/delete/moderate), not just review. Authorization pattern: admins bypass ownership checks and are allowed on management actions everywhere. Concretely for courses: admins author, edit, transition (incl. publish a draft directly, no self-submit), and manage **any** instructor's course. New entity features must extend the same admin-super-user rule. (Role-specific *experiences* — e.g. a student's own learning — remain role-scoped; "manage" ≠ impersonate.)
 - **Google Meet** for live classes (server-side API integration). **S3 video streaming = recorded sessions** watched on demand.
 
 ## Working agreements
