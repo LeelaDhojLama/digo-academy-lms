@@ -21,7 +21,7 @@ async function main() {
   const email = process.env.ADMIN_EMAIL;
   const password = process.env.ADMIN_PASSWORD;
   const name = process.env.ADMIN_NAME ?? 'Admin';
-  const connectionString = process.env.DATABASE_URL;
+  const connectionString = process.env.DIRECT_URL ?? process.env.DATABASE_URL;
 
   if (!email || !password) {
     throw new Error('Set ADMIN_EMAIL and ADMIN_PASSWORD environment variables.');
@@ -30,7 +30,7 @@ async function main() {
     throw new Error('ADMIN_PASSWORD must be at least 8 characters.');
   }
   if (!connectionString) {
-    throw new Error('DATABASE_URL is not set.');
+    throw new Error('DATABASE_URL (or DIRECT_URL) is not set.');
   }
 
   const db = new PrismaClient({ adapter: new PrismaPg({ connectionString }) });

@@ -5,11 +5,15 @@ import { z } from 'zod';
 /**
  * Server-side environment validation. Import only from server code.
  * Add new server env vars here so misconfiguration fails fast at boot.
+ *
+ * On Vercel/CI these must be set in Project → Settings → Environment Variables
+ * (Production + Preview). Missing DATABASE_URL or BETTER_AUTH_SECRET will fail
+ * the build when /api/auth is collected.
  */
 const envSchema = z.object({
   /**
-   * App / Prisma Client connection. With Supabase, use the transaction pooler
-   * (port 6543) and append `?pgbouncer=true`. Local Docker uses the compose URL.
+   * App / Prisma Client connection. With Supabase, use the session or transaction
+   * pooler (`*.pooler.supabase.com`) — not the IPv6-only `db.*` host.
    */
   DATABASE_URL: z.string().min(1, 'DATABASE_URL is required'),
   /**
@@ -22,7 +26,11 @@ const envSchema = z.object({
 
   // Better Auth
   BETTER_AUTH_SECRET: z.string().min(1, 'BETTER_AUTH_SECRET is required'),
-  BETTER_AUTH_URL: z.string().url().default('http://localhost:3000'),
+  /** Public app origin, e.g. https://your-app.vercel.app — required in production. */
+  BETTER_AUTH_URL: z.preprocess(
+    (v) => (typeof v === 'string' && v.trim() === '' ? undefined : v),
+    z.string().url().default('http://localhost:3000')
+  ),
 
   // Google OAuth (optional — social login is enabled only when both are set)
   GOOGLE_CLIENT_ID: z.string().optional(),
@@ -32,8 +40,7 @@ const envSchema = z.object({
   // it in local development. Any value other than "false" keeps it enforced.
   ENFORCE_MFA: z.string().optional(),
 
-  // S3 / object storage (MinIO for local dev, AWS S3 in prod). Uploads are
-  // disabled until bucket + credentials are configured.
+  // S3 / object storage (MinIO for local dev, AWS S3 / Supabase Storage in prod).
   S3_BUCKET: z.string().optional(),
   S3_REGION: z.string().default('us-east-1'),
   S3_ACCESS_KEY_ID: z.string().optional(),
@@ -44,7 +51,21 @@ const envSchema = z.object({
   S3_FORCE_PATH_STYLE: z.string().optional(),
 });
 
-export const env = envSchema.parse(process.env);
+function parseEnv() {
+  const result = envSchema.safeParse(process.env);
+  if (result.success) return result.data;
+
+  const details = result.error.issues
+    .map((issue) => `  - ${issue.path.join('.') || '(root)'}: ${issue.message}`)
+    .join('\n');
+  throw new Error(
+    `Invalid environment variables:\n${details}\n\n` +
+      'Set DATABASE_URL and BETTER_AUTH_SECRET (and BETTER_AUTH_URL for production) ' +
+      'in your host’s environment settings, then redeploy.'
+  );
+}
+
+export const env = parseEnv();
 
 /** Google social login is available only when both credentials are configured. */
 export const isGoogleAuthEnabled =

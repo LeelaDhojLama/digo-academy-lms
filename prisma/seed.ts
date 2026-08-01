@@ -11,9 +11,9 @@ import { PrismaClient } from '../lib/generated/prisma/client';
  * Standalone client: `lib/db.ts` is `server-only` and can't be imported by a
  * plain `tsx` script, so the seed builds its own adapter-backed client.
  */
-const connectionString = process.env['DATABASE_URL'];
+const connectionString = process.env['DIRECT_URL'] ?? process.env['DATABASE_URL'];
 if (!connectionString) {
-  throw new Error('DATABASE_URL is not set — cannot seed.');
+  throw new Error('DATABASE_URL (or DIRECT_URL) is not set — cannot seed.');
 }
 
 const db = new PrismaClient({ adapter: new PrismaPg({ connectionString }) });
