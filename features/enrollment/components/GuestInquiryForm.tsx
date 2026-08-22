@@ -4,6 +4,8 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { CheckCircle2 } from 'lucide-react';
 import { useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
+import PhoneInput, { type Value } from 'react-phone-number-input';
+import 'react-phone-number-input/style.css';
 import { toast } from 'sonner';
 
 import {
@@ -23,6 +25,15 @@ const MODE_HINTS: Record<(typeof ENROLLMENT_MODES)[number], string> = {
   GROUP_LIVE: 'Scheduled live sessions with an instructor and a cohort.',
   SELF_PACED: 'Recorded lessons and materials you work through anytime.',
 };
+
+// Style react-phone-number-input to match the app's <Input>: a bordered box
+// wrapping the country flag/select and a borderless number field.
+const phoneInputClass = cn(
+  'flex h-9 w-full items-center gap-2 rounded-lg border border-input bg-transparent px-2.5 text-base transition-colors',
+  'focus-within:border-ring focus-within:ring-3 focus-within:ring-ring/50 md:text-sm',
+  '[&_.PhoneInputInput]:h-full [&_.PhoneInputInput]:border-0 [&_.PhoneInputInput]:bg-transparent [&_.PhoneInputInput]:text-base [&_.PhoneInputInput]:outline-none [&_.PhoneInputInput]:placeholder:text-muted-foreground md:[&_.PhoneInputInput]:text-sm'
+);
+const phoneInputInvalid = 'border-destructive ring-3 ring-destructive/20';
 
 /**
  * Public (guest) booking form. Captures contact details and submits an inquiry
@@ -118,8 +129,24 @@ export function GuestInquiryForm({ courseId }: { courseId: string }) {
       </Field>
 
       <Field>
-        <FieldLabel htmlFor="phone">Phone (optional)</FieldLabel>
-        <Input id="phone" type="tel" autoComplete="tel" {...register('phone')} />
+        <FieldLabel htmlFor="phone">Phone</FieldLabel>
+        <Controller
+          control={control}
+          name="phone"
+          render={({ field }) => (
+            <PhoneInput
+              id="phone"
+              international
+              defaultCountry="NP"
+              autoComplete="tel"
+              placeholder="Enter phone number"
+              value={(field.value ?? '') as Value}
+              onChange={(value) => field.onChange(value ?? '')}
+              onBlur={field.onBlur}
+              className={cn(phoneInputClass, errors.phone && phoneInputInvalid)}
+            />
+          )}
+        />
         <FieldError errors={[errors.phone]} />
       </Field>
 

@@ -7,6 +7,7 @@ import { twoFactor } from 'better-auth/plugins';
 
 import { db } from '@/lib/db';
 import { sendEmail } from '@/lib/email';
+import { renderEmail } from '@/lib/email-template';
 import { env, isGoogleAuthEnabled } from '@/lib/env';
 import { lockoutAfterHook, lockoutBeforeHook } from '@/lib/auth/lockout';
 
@@ -27,11 +28,14 @@ export const auth = betterAuth({
     enabled: true,
     requireEmailVerification: true,
     sendResetPassword: async ({ user, url }) => {
-      await sendEmail({
-        to: user.email,
-        subject: 'Reset your Digo Academy password',
-        text: `Reset your password with this link (expires soon): ${url}`,
+      const { html, text } = renderEmail({
+        heading: 'Reset your password',
+        intro: `Hi ${user.name || 'there'},`,
+        paragraphs: ['We received a request to reset your Digo Academy password. Click below to choose a new one.'],
+        button: { label: 'Reset password', url },
+        footerNote: "This link expires soon. If you didn't request it, you can safely ignore this email.",
       });
+      await sendEmail({ to: user.email, subject: 'Reset your Digo Academy password', text, html });
     },
   },
 
@@ -39,11 +43,14 @@ export const auth = betterAuth({
     sendOnSignUp: true,
     autoSignInAfterVerification: true,
     sendVerificationEmail: async ({ user, url }) => {
-      await sendEmail({
-        to: user.email,
-        subject: 'Verify your Digo Academy email',
-        text: `Verify your email with this link (expires soon): ${url}`,
+      const { html, text } = renderEmail({
+        heading: 'Verify your email',
+        intro: `Hi ${user.name || 'there'},`,
+        paragraphs: ['Welcome to Digo Academy! Confirm your email address to activate your account.'],
+        button: { label: 'Verify email', url },
+        footerNote: 'This link expires soon.',
       });
+      await sendEmail({ to: user.email, subject: 'Verify your Digo Academy email', text, html });
     },
   },
 

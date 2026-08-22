@@ -102,6 +102,7 @@ export default async function AdminCourseBuilderPage({
                         timeLimitSec: lesson.quiz.timeLimitSec,
                         questions: lesson.quiz.questions.map((q) => ({
                           prompt: q.prompt,
+                          explanation: q.explanation,
                           kind: q.kind,
                           choices: q.choices.map((c) => ({
                             text: c.text,

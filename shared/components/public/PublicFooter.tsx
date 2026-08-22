@@ -14,13 +14,6 @@ const LINK_COLUMNS = [
     ],
   },
   {
-    heading: 'Teach',
-    links: [
-      { label: 'Become an instructor', href: '/register/instructor' },
-      { label: 'Instructor sign in', href: '/login' },
-    ],
-  },
-  {
     heading: 'Account',
     links: [
       { label: 'Sign in', href: '/login' },

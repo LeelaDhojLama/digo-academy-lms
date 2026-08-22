@@ -5,7 +5,6 @@ import {
   BarChart3,
   BookOpen,
   Camera,
-  CheckCircle2,
   ClipboardList,
   Code2,
   Globe2,
@@ -168,10 +167,6 @@ const FAQS = [
   {
     q: 'Will I get a certificate?',
     a: 'Yes. Eligible courses award a shareable certificate of completion once you finish the required lessons.',
-  },
-  {
-    q: 'How do I become an instructor?',
-    a: 'Apply through “Become an instructor.” Once approved, you can publish self-paced courses and run live cohorts for motivated learners.',
   },
 ];
 
@@ -640,45 +635,6 @@ export default async function HomePage() {
             ))}
           </div>
         </div>
-      </section>
-
-      {/* ------------------------------------------------------------------ */}
-      {/* Instructor CTA band                                                */}
-      {/* ------------------------------------------------------------------ */}
-      <section className="mx-auto w-full max-w-6xl px-4 py-16 sm:px-6 lg:px-8">
-        <Reveal>
-          <div className="relative overflow-hidden rounded-3xl bg-linear-to-br from-brand-blue via-indigo-600 to-violet-600 px-6 py-12 text-white sm:px-12">
-            <div className="pointer-events-none absolute -right-16 -top-16 size-64 animate-blob rounded-full bg-brand-coral/30 blur-3xl" />
-            <div className="pointer-events-none absolute -bottom-20 -left-10 size-64 animate-blob anim-delay-2 rounded-full bg-cyan-400/20 blur-3xl" />
-            <div className="relative flex flex-col items-start gap-6 lg:flex-row lg:items-center lg:justify-between">
-              <div className="max-w-xl">
-                <h2 className="font-heading text-2xl font-semibold tracking-tight sm:text-3xl">
-                  Share your knowledge, inspire the world
-                </h2>
-                <p className="mt-3 text-white/85">
-                  Teach live cohorts or publish self-paced courses. Reach motivated learners and
-                  grow your impact with Digo Academy.
-                </p>
-                <ul className="mt-5 flex flex-wrap gap-x-6 gap-y-2 text-sm text-white/85">
-                  {['Set your own schedule', 'Reach global learners', 'Get paid to teach'].map(
-                    (item) => (
-                      <li key={item} className="flex items-center gap-1.5">
-                        <CheckCircle2 className="size-4 text-emerald-300" />
-                        {item}
-                      </li>
-                    )
-                  )}
-                </ul>
-              </div>
-              <Button
-                size="lg"
-                className="rounded-full bg-white px-7 text-brand-blue shadow-lg transition-transform hover:scale-105 hover:bg-white/90"
-                nativeButton={false}
-                render={<Link href="/register/instructor">Become an instructor</Link>}
-              />
-            </div>
-          </div>
-        </Reveal>
       </section>
 
       {/* ------------------------------------------------------------------ */}

@@ -26,6 +26,7 @@ export default async function AdminLayout({ children }: { children: ReactNode })
           items: [
             { label: 'Inquiries', href: '/admin/inquiries', icon: 'inquiries' },
             { label: 'Enrollments', href: '/admin/enrollments', icon: 'enrollments' },
+            { label: 'Learning paths', href: '/admin/learning-paths', icon: 'paths' },
             { label: 'Payments', href: '/admin/payments', icon: 'payments' },
           ],
         },

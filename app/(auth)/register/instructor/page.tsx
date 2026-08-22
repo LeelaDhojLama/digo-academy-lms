@@ -1,25 +1,10 @@
-import { RegisterForm } from '@/features/auth/components/RegisterForm';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/shared/components/ui/card';
+import { redirect } from 'next/navigation';
 
+/**
+ * Retired route. Public instructor self-registration was removed — instructors
+ * are created by an admin (Admin ▸ Users ▸ Instructors). Anyone hitting the old
+ * URL is sent to the standard (student) sign-up.
+ */
 export default function InstructorRegisterPage() {
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Register as an instructor</CardTitle>
-        <CardDescription>
-          Create an instructor account. An admin reviews instructor accounts before they can publish
-          courses.
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <RegisterForm asInstructor />
-      </CardContent>
-    </Card>
-  );
+  redirect('/register');
 }

@@ -301,6 +301,7 @@ export async function upsertQuiz(lessonId: string, input: QuizInput): Promise<Ac
         data: {
           quizId: quiz.id,
           prompt: question.prompt,
+          explanation: emptyToNull(question.explanation),
           kind: question.kind,
           order: index,
           choices: {

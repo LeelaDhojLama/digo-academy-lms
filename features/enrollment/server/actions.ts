@@ -18,6 +18,11 @@ import {
   type EnrollmentMode,
   type RecordPaymentInput,
 } from '@/features/enrollment/schemas';
+import {
+  sendEnrolledEmail,
+  sendInquiryApprovedEmail,
+  sendInquiryReceivedEmail,
+} from '@/features/enrollment/server/emails';
 import { isOpen, nextStage, type InquiryStatus } from '@/features/enrollment/pipeline';
 import { recordAudit } from '@/lib/audit';
 import { auth } from '@/lib/auth';
@@ -95,6 +100,13 @@ export async function createInquiry(input: CreateInquiryInput): Promise<InquiryR
     metadata: { courseId, mode },
   });
 
+  await sendInquiryReceivedEmail({
+    to: session.user.email,
+    name: session.user.name,
+    courseTitle: course.title,
+    mode,
+  });
+
   revalidatePath('/admin/inquiries');
   revalidatePath('/student/inquiries');
   revalidatePath(`/student/courses/${courseId}`);
@@ -116,7 +128,7 @@ export async function createGuestInquiry(input: CreateGuestInquiryInput): Promis
 
   const course = await db.course.findFirst({
     where: { id: courseId, status: 'PUBLISHED' },
-    select: { id: true },
+    select: { id: true, title: true },
   });
   if (!course) return { ok: false, error: 'Course is not available.' };
 
@@ -161,6 +173,8 @@ export async function createGuestInquiry(input: CreateGuestInquiryInput): Promis
     metadata: { courseId, mode, guest: true, email },
   });
 
+  await sendInquiryReceivedEmail({ to: email, name, courseTitle: course.title, mode });
+
   revalidatePath('/admin/inquiries');
   return { ok: true, inquiryId: inquiry.id };
 }
@@ -174,7 +188,13 @@ export async function advanceInquiry(inquiryId: string): Promise<ActionResult> {
   const session = await authorize(ROLES.ADMIN);
   if (!session) return { ok: false, error: 'Not authorized.' };
 
-  const inquiry = await db.inquiry.findUnique({ where: { id: inquiryId } });
+  const inquiry = await db.inquiry.findUnique({
+    where: { id: inquiryId },
+    include: {
+      student: { select: { email: true, name: true } },
+      course: { select: { title: true } },
+    },
+  });
   if (!inquiry) return { ok: false, error: 'Inquiry not found.' };
 
   const next = nextStage(inquiry.status as InquiryStatus);
@@ -191,6 +211,18 @@ export async function advanceInquiry(inquiryId: string): Promise<ActionResult> {
     entityId: inquiryId,
     metadata: { from: inquiry.status, to: next },
   });
+
+  // "Approved" = the request is confirmed for enrollment.
+  if (next === 'CONFIRMED') {
+    const to = inquiry.student?.email ?? inquiry.guestEmail;
+    if (to) {
+      await sendInquiryApprovedEmail({
+        to,
+        name: inquiry.student?.name ?? inquiry.guestName ?? 'there',
+        courseTitle: inquiry.course.title,
+      });
+    }
+  }
 
   revalidatePath('/admin/inquiries');
   return { ok: true };
@@ -303,7 +335,10 @@ export async function convertInquiryToEnrollment(
 
   const inquiry = await db.inquiry.findUnique({
     where: { id: inquiryId },
-    include: { enrollment: { select: { id: true } } },
+    include: {
+      enrollment: { select: { id: true } },
+      course: { select: { title: true } },
+    },
   });
   if (!inquiry) return { ok: false, error: 'Inquiry not found.' };
   if (inquiry.enrollment) return { ok: false, error: 'This inquiry is already enrolled.' };
@@ -314,20 +349,23 @@ export async function convertInquiryToEnrollment(
   const cohort = resolveCohort(inquiry.mode as EnrollmentMode, batchId, learningPlanId);
   if (typeof cohort === 'string') return { ok: false, error: cohort };
 
-  // Validate the chosen cohort belongs to this course.
+  // Validate the chosen cohort belongs to this course, capturing its name.
+  let cohortLabel = 'your cohort';
   if (cohort.batchId) {
     const batch = await db.batch.findFirst({
       where: { id: cohort.batchId, courseId: inquiry.courseId },
-      select: { id: true },
+      select: { id: true, name: true },
     });
     if (!batch) return { ok: false, error: 'That batch does not belong to this course.' };
+    cohortLabel = `batch "${batch.name}"`;
   }
   if (cohort.learningPlanId) {
     const plan = await db.learningPlan.findFirst({
       where: { id: cohort.learningPlanId, courseId: inquiry.courseId },
-      select: { id: true },
+      select: { id: true, name: true },
     });
     if (!plan) return { ok: false, error: 'That learning plan does not belong to this course.' };
+    cohortLabel = `the "${plan.name}" learning plan`;
   }
 
   const resolved = await resolveInquiryStudent(inquiry);
@@ -368,6 +406,21 @@ export async function convertInquiryToEnrollment(
     }
   }
 
+  // Enrollment confirmation + cohort assignment email.
+  const student = await db.user.findUnique({
+    where: { id: studentId },
+    select: { email: true, name: true },
+  });
+  if (student?.email) {
+    await sendEnrolledEmail({
+      to: student.email,
+      name: student.name,
+      courseTitle: inquiry.course.title,
+      cohortLabel,
+      invited: Boolean(resolved.invitedEmail),
+    });
+  }
+
   await recordAudit({
     actorId: session.user.id,
     action: 'enrollment.created',
@@ -401,25 +454,28 @@ export async function createEnrollment(input: CreateEnrollmentInput): Promise<En
   if (typeof cohort === 'string') return { ok: false, error: cohort };
 
   const [student, course] = await Promise.all([
-    db.user.findUnique({ where: { id: studentId }, select: { id: true } }),
-    db.course.findUnique({ where: { id: courseId }, select: { id: true } }),
+    db.user.findUnique({ where: { id: studentId }, select: { id: true, email: true, name: true } }),
+    db.course.findUnique({ where: { id: courseId }, select: { id: true, title: true } }),
   ]);
   if (!student) return { ok: false, error: 'Student not found.' };
   if (!course) return { ok: false, error: 'Course not found.' };
 
+  let cohortLabel = 'your cohort';
   if (cohort.batchId) {
     const batch = await db.batch.findFirst({
       where: { id: cohort.batchId, courseId },
-      select: { id: true },
+      select: { id: true, name: true },
     });
     if (!batch) return { ok: false, error: 'That batch does not belong to this course.' };
+    cohortLabel = `batch "${batch.name}"`;
   }
   if (cohort.learningPlanId) {
     const plan = await db.learningPlan.findFirst({
       where: { id: cohort.learningPlanId, courseId },
-      select: { id: true },
+      select: { id: true, name: true },
     });
     if (!plan) return { ok: false, error: 'That learning plan does not belong to this course.' };
+    cohortLabel = `the "${plan.name}" learning plan`;
   }
 
   const existing = await db.enrollment.findUnique({
@@ -444,6 +500,16 @@ export async function createEnrollment(input: CreateEnrollmentInput): Promise<En
     entityId: enrollment.id,
     metadata: { from: 'direct', mode },
   });
+
+  if (student.email) {
+    await sendEnrolledEmail({
+      to: student.email,
+      name: student.name,
+      courseTitle: course.title,
+      cohortLabel,
+      invited: false,
+    });
+  }
 
   revalidateEnrollment(enrollment.id);
   return { ok: true, enrollmentId: enrollment.id };

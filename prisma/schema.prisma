@@ -383,10 +383,11 @@ model Quiz {
 model Question {
   id      String          @id @default(cuid())
   quizId  String
-  quiz    Quiz            @relation(fields: [quizId], references: [id], onDelete: Cascade)
-  prompt  String
-  kind    QuestionKind    @default(SINGLE)
-  order   Int             @default(0)
+  quiz        Quiz            @relation(fields: [quizId], references: [id], onDelete: Cascade)
+  prompt      String
+  explanation String? // shown after answering; populated e.g. by the course importer
+  kind        QuestionKind    @default(SINGLE)
+  order       Int             @default(0)
   choices Choice[]
   answers AttemptAnswer[]
 

@@ -1,3 +1,4 @@
+import { isValidPhoneNumber } from 'libphonenumber-js';
 import { z } from 'zod';
 
 /** Enrollment mode — mirrors the Prisma `EnrollmentMode` enum. */
@@ -35,7 +36,12 @@ export const createGuestInquirySchema = z.object({
   mode: enrollmentModeSchema,
   name: z.string().trim().min(2, 'Enter your name').max(100, 'Name is too long'),
   email: z.string().trim().toLowerCase().email('Enter a valid email'),
-  phone: z.string().trim().max(30, 'Phone is too long').optional(),
+  // Required. The client sends E.164 (e.g. +9779812345678) from the phone input.
+  phone: z
+    .string()
+    .trim()
+    .min(1, 'Phone number is required')
+    .refine((value) => isValidPhoneNumber(value), 'Enter a valid phone number'),
   message: z.string().trim().max(1000, 'Keep it under 1000 characters.').optional(),
 });
 export type CreateGuestInquiryInput = z.infer<typeof createGuestInquirySchema>;

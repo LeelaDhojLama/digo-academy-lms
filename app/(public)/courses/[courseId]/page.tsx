@@ -23,7 +23,6 @@ import { Panel } from '@/shared/components/dashboard/Panel';
 import { RichTextContent } from '@/shared/components/dashboard/RichTextContent';
 import { Button } from '@/shared/components/ui/button';
 import { ROLES } from '@/shared/constants/roles';
-import { cn } from '@/shared/utils/cn';
 import { formatMoney } from '@/shared/utils/money';
 
 const LESSON_ICONS = {
@@ -403,23 +402,6 @@ export default async function PublicCourseDetailPage({
               </p>
             </Panel>
 
-            {/* Upsell band */}
-            <div
-              className={cn(
-                'mt-4 overflow-hidden rounded-2xl bg-linear-to-br from-brand-blue to-indigo-700 p-5 text-white shadow-sm'
-              )}
-            >
-              <p className="font-heading text-sm font-semibold">Digo for Business</p>
-              <p className="mt-1 text-xs text-white/85">
-                Upskill your whole team with cohort access and shared progress tracking.
-              </p>
-              <Link
-                href="/register/instructor"
-                className="mt-3 inline-block text-xs font-semibold underline underline-offset-4"
-              >
-                Learn more
-              </Link>
-            </div>
           </div>
         </aside>
       </div>

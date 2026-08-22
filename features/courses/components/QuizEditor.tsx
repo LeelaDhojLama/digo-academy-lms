@@ -1,10 +1,11 @@
 'use client';
 
-import { Plus, Trash2 } from 'lucide-react';
+import { Download, FileUp, Plus, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
 
 import type { EditorLesson } from '@/features/courses/components/CurriculumEditor';
+import { QUIZ_CSV_TEMPLATE, parseQuizCsv } from '@/features/courses/quiz-import';
 import { QUESTION_KINDS, type QuestionKind, type QuizInput } from '@/features/courses/schemas';
 import { upsertQuiz } from '@/features/courses/server/actions';
 import { Button } from '@/shared/components/ui/button';
@@ -18,9 +19,12 @@ interface Choice {
 }
 interface Question {
   prompt: string;
+  explanation: string;
   kind: QuestionKind;
   choices: Choice[];
 }
+
+const TEMPLATE_HREF = `data:text/csv;charset=utf-8,${encodeURIComponent(QUIZ_CSV_TEMPLATE)}`;
 
 const KIND_LABELS: Record<QuestionKind, string> = {
   SINGLE: 'Single answer (radio)',
@@ -34,7 +38,7 @@ function newChoice(): Choice {
   return { text: '', isCorrect: false };
 }
 function newQuestion(): Question {
-  return { prompt: '', kind: 'SINGLE', choices: [newChoice(), newChoice()] };
+  return { prompt: '', explanation: '', kind: 'SINGLE', choices: [newChoice(), newChoice()] };
 }
 
 function initialQuestions(lesson: EditorLesson): Question[] {
@@ -42,9 +46,18 @@ function initialQuestions(lesson: EditorLesson): Question[] {
   if (!existing || existing.length === 0) return [newQuestion()];
   return existing.map((q) => ({
     prompt: q.prompt,
+    explanation: q.explanation ?? '',
     kind: (q.kind === 'MULTIPLE' ? 'MULTIPLE' : 'SINGLE') as QuestionKind,
     choices: q.choices.map((c) => ({ text: c.text, isCorrect: c.isCorrect })),
   }));
+}
+
+function isEmptyStarter(questions: Question[]): boolean {
+  return (
+    questions.length === 1 &&
+    questions[0].prompt.trim() === '' &&
+    questions[0].choices.every((c) => c.text.trim() === '')
+  );
 }
 
 /**
@@ -67,9 +80,35 @@ export function QuizEditor({
   );
   const [questions, setQuestions] = useState<Question[]>(() => initialQuestions(lesson));
   const [busy, setBusy] = useState(false);
+  const [importOpen, setImportOpen] = useState(false);
+  const [csvText, setCsvText] = useState('');
 
   function updateQuestion(qi: number, patch: Partial<Question>) {
     setQuestions((prev) => prev.map((q, i) => (i === qi ? { ...q, ...patch } : q)));
+  }
+
+  function loadCsv(text: string) {
+    const { questions: imported, errors } = parseQuizCsv(text);
+    if (imported.length === 0) {
+      toast.error(errors[0] ?? 'No questions found in that CSV.');
+      return;
+    }
+    const mapped: Question[] = imported.map((q) => ({
+      prompt: q.prompt,
+      explanation: q.explanation,
+      kind: q.kind,
+      choices: q.choices.map((c) => ({ text: c.text, isCorrect: c.isCorrect })),
+    }));
+    // Replace the blank starter, otherwise append to what's there.
+    setQuestions((prev) => (isEmptyStarter(prev) ? mapped : [...prev, ...mapped]));
+    toast.success(
+      `Imported ${imported.length} question${imported.length === 1 ? '' : 's'}` +
+        (errors.length ? ` · ${errors.length} skipped` : '') +
+        '. Review, then Save quiz.'
+    );
+    if (errors.length) errors.slice(0, 3).forEach((e) => toast.warning(e));
+    setCsvText('');
+    setImportOpen(false);
   }
 
   function changeKind(qi: number, kind: QuestionKind) {
@@ -154,6 +193,7 @@ export function QuizEditor({
           : undefined,
       questions: questions.map((q) => ({
         prompt: q.prompt.trim(),
+        explanation: q.explanation.trim(),
         kind: q.kind,
         choices: q.choices.map((c) => ({ text: c.text.trim(), isCorrect: c.isCorrect })),
       })),
@@ -224,6 +264,75 @@ export function QuizEditor({
             />
           </div>
         </div>
+      </div>
+
+      {/* Bulk import from CSV */}
+      <div className="rounded-lg border border-dashed bg-background p-3">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <div>
+            <span className="text-sm font-medium">Import questions from a spreadsheet</span>
+            <p className="text-xs text-muted-foreground">
+              Fill the CSV template in Excel or Google Sheets — one row per question.
+            </p>
+          </div>
+          <div className="flex items-center gap-2">
+            <Button
+              type="button"
+              variant="ghost"
+              size="xs"
+              nativeButton={false}
+              render={<a href={TEMPLATE_HREF} download="quiz-template.csv" />}
+            >
+              <Download />
+              Template
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              size="xs"
+              onClick={() => setImportOpen((open) => !open)}
+            >
+              <FileUp />
+              {importOpen ? 'Close' : 'Import CSV'}
+            </Button>
+          </div>
+        </div>
+
+        {importOpen && (
+          <div className="mt-3 space-y-2">
+            <div className="flex items-center gap-2">
+              <label>
+                <input
+                  type="file"
+                  accept=".csv,text/csv"
+                  className="sr-only"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) file.text().then(loadCsv);
+                    e.target.value = '';
+                  }}
+                />
+                <Button type="button" variant="outline" size="xs" nativeButton={false} render={<span />}>
+                  <FileUp />
+                  Upload .csv
+                </Button>
+              </label>
+              <span className="text-xs text-muted-foreground">or paste CSV below</span>
+            </div>
+            <Textarea
+              rows={4}
+              value={csvText}
+              onChange={(e) => setCsvText(e.target.value)}
+              placeholder="prompt,type,explanation,choice1,correct1,choice2,correct2,…"
+              className="font-mono text-xs"
+            />
+            <div className="flex justify-end">
+              <Button type="button" size="xs" onClick={() => loadCsv(csvText)} disabled={!csvText.trim()}>
+                Load questions
+              </Button>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Questions */}
@@ -305,6 +414,22 @@ export function QuizEditor({
                 <Plus />
                 Add choice
               </Button>
+            </div>
+
+            <div className="pl-6">
+              <label
+                htmlFor={`quiz-expl-${lesson.id}-${qi}`}
+                className="mb-1 block text-xs font-medium text-muted-foreground"
+              >
+                Explanation (optional) — shown after the learner answers
+              </label>
+              <Textarea
+                id={`quiz-expl-${lesson.id}-${qi}`}
+                value={question.explanation}
+                onChange={(e) => updateQuestion(qi, { explanation: e.target.value })}
+                rows={2}
+                placeholder="Why the correct answer is correct…"
+              />
             </div>
           </div>
         ))}

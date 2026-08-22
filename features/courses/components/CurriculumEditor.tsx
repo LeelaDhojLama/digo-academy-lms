@@ -18,6 +18,7 @@ export interface EditorQuizChoice {
 }
 export interface EditorQuizQuestion {
   prompt: string;
+  explanation?: string | null;
   kind: string;
   choices: EditorQuizChoice[];
 }

@@ -62,6 +62,7 @@ const quizChoiceSchema = z.object({
 const quizQuestionSchema = z
   .object({
     prompt: z.string().min(1, 'Question text is required').max(1000),
+    explanation: optionalText(4_000),
     kind: z.enum(QUESTION_KINDS),
     choices: z.array(quizChoiceSchema).min(2, 'Add at least two choices').max(10),
   })

@@ -6,14 +6,13 @@ import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 
-import { registerInstructor } from '@/features/auth/server/register-instructor';
 import { registerSchema, type RegisterInput } from '@/features/auth/schemas';
 import { authClient } from '@/lib/auth/client';
 import { Button } from '@/shared/components/ui/button';
 import { Field, FieldError, FieldGroup, FieldLabel } from '@/shared/components/ui/field';
 import { Input } from '@/shared/components/ui/input';
 
-export function RegisterForm({ asInstructor = false }: { asInstructor?: boolean }) {
+export function RegisterForm() {
   const router = useRouter();
   const {
     register,
@@ -22,22 +21,17 @@ export function RegisterForm({ asInstructor = false }: { asInstructor?: boolean 
   } = useForm<RegisterInput>({ resolver: zodResolver(registerSchema) });
 
   async function onSubmit(values: RegisterInput) {
-    if (asInstructor) {
-      const result = await registerInstructor(values);
-      if (!result.ok) {
-        toast.error(result.error ?? 'Registration failed');
-        return;
-      }
-    } else {
-      const { error } = await authClient.signUp.email({
-        name: values.name,
-        email: values.email,
-        password: values.password,
-      });
-      if (error) {
-        toast.error(error.message ?? 'Registration failed');
-        return;
-      }
+    // Public sign-up creates student accounts only. Instructors are created by
+    // an admin (Admin ▸ Users ▸ Instructors); there is no public instructor
+    // self-registration.
+    const { error } = await authClient.signUp.email({
+      name: values.name,
+      email: values.email,
+      password: values.password,
+    });
+    if (error) {
+      toast.error(error.message ?? 'Registration failed');
+      return;
     }
 
     toast.success('Account created. Check your email to verify your address.');
@@ -73,7 +67,7 @@ export function RegisterForm({ asInstructor = false }: { asInstructor?: boolean 
           <FieldError errors={[errors.confirmPassword]} />
         </Field>
         <Button type="submit" disabled={isSubmitting}>
-          {isSubmitting ? 'Creating account…' : asInstructor ? 'Register as instructor' : 'Create account'}
+          {isSubmitting ? 'Creating account…' : 'Create account'}
         </Button>
       </FieldGroup>
 

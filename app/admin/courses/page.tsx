@@ -1,4 +1,4 @@
-import { BookOpen } from 'lucide-react';
+import { BookOpen, FileUp } from 'lucide-react';
 import Link from 'next/link';
 
 import { CourseStatusBadge } from '@/features/courses/components/CourseStatusBadge';
@@ -20,7 +20,19 @@ export default async function AdminCoursesPage() {
         title="Courses"
         description={`Manage every course. ${needsReview > 0 ? `${needsReview} awaiting review.` : 'Nothing awaiting review.'}`}
         action={
-          <Button nativeButton={false} render={<Link href="/admin/courses/new">New course</Link>} />
+          <>
+            <Button
+              variant="outline"
+              nativeButton={false}
+              render={
+                <Link href="/admin/courses/import">
+                  <FileUp />
+                  Import from doc
+                </Link>
+              }
+            />
+            <Button nativeButton={false} render={<Link href="/admin/courses/new">New course</Link>} />
+          </>
         }
       />
 
