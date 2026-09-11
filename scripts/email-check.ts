@@ -83,7 +83,7 @@ async function main() {
         identities.push({
           name: id.IdentityName ?? '',
           type: id.IdentityType,
-          verified: id.VerifiedForSendingStatus,
+          verified: id.VerificationStatus === 'SUCCESS',
         });
       }
       nextToken = res.NextToken;
