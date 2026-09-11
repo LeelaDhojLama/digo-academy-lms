@@ -30,6 +30,10 @@ export default async function AdminCourseBuilderPage({
   return (
     <div className="space-y-6">
       <PageHeader
+        breadcrumbs={[
+          { label: 'Admin', href: '/admin' },
+          { label: 'Courses', href: '/admin/courses' },
+        ]}
         title={course.title}
         description={
           <div className="space-y-1.5">

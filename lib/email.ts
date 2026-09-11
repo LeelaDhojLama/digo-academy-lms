@@ -1,6 +1,6 @@
 import 'server-only';
 
-import { Resend } from 'resend';
+import { SESv2Client, SendEmailCommand } from '@aws-sdk/client-sesv2';
 
 import { env } from '@/lib/env';
 
@@ -13,19 +13,32 @@ export interface SendEmailInput {
   html?: string;
 }
 
-/** Whether a real email provider is configured. */
-export const isEmailConfigured = Boolean(env.RESEND_API_KEY);
+/** Whether a real email provider (AWS SES) is configured. */
+export const isEmailConfigured = Boolean(env.SES_REGION);
 
-let resendClient: Resend | null = null;
-function getResend(): Resend {
-  resendClient ??= new Resend(env.RESEND_API_KEY);
-  return resendClient;
+let sesClient: SESv2Client | null = null;
+function getSes(): SESv2Client {
+  if (!sesClient) {
+    sesClient = new SESv2Client({
+      region: env.SES_REGION,
+      // Explicit keys when provided; otherwise the default AWS provider chain
+      // (IAM role on the host, or standard AWS_* env vars).
+      credentials:
+        env.SES_ACCESS_KEY_ID && env.SES_SECRET_ACCESS_KEY
+          ? {
+              accessKeyId: env.SES_ACCESS_KEY_ID,
+              secretAccessKey: env.SES_SECRET_ACCESS_KEY,
+            }
+          : undefined,
+    });
+  }
+  return sesClient;
 }
 
 /**
  * Transactional email sender.
  *
- * - If RESEND_API_KEY is set, sends via Resend (production path).
+ * - If SES_REGION is set, sends via AWS SES (production path).
  * - Otherwise, in development it logs the message (including any verification /
  *   reset link) to the server console.
  * - In production with no provider it throws, so misconfiguration fails loudly
@@ -33,18 +46,27 @@ function getResend(): Resend {
  */
 export async function sendEmail({ to, subject, text, html }: SendEmailInput): Promise<void> {
   if (isEmailConfigured) {
-    const { error } = await getResend().emails.send(
-      html
-        ? { from: env.EMAIL_FROM, to, subject, html, text }
-        : { from: env.EMAIL_FROM, to, subject, text }
+    await getSes().send(
+      new SendEmailCommand({
+        FromEmailAddress: env.EMAIL_FROM,
+        Destination: { ToAddresses: [to] },
+        Content: {
+          Simple: {
+            Subject: { Data: subject, Charset: 'UTF-8' },
+            Body: {
+              ...(html ? { Html: { Data: html, Charset: 'UTF-8' } } : {}),
+              Text: { Data: text, Charset: 'UTF-8' },
+            },
+          },
+        },
+      })
     );
-    if (error) throw new Error(`Email send failed: ${error.message}`);
     return;
   }
 
   if (env.NODE_ENV === 'production') {
     throw new Error(
-      'No email provider configured. Set RESEND_API_KEY (and EMAIL_FROM) before production.'
+      'No email provider configured. Set SES_REGION (and EMAIL_FROM) before production.'
     );
   }
 

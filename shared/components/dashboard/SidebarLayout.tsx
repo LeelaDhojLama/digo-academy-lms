@@ -27,7 +27,7 @@ const REVEAL = 'transition-opacity duration-150 lg:opacity-0 lg:group-hover/asid
  * a sticky top bar, and a soft grey content canvas.
  *
  * On desktop the sidebar is a permanently-collapsed icon rail that expands on
- * hover (overlaying the content, so nothing reflows). On mobile it's a slide-in
+ * hover, reflowing the content column to make room. On mobile it's a slide-in
  * drawer toggled from the top bar. Client component so it can own the drawer
  * state; the server shell passes serializable props + the pre-rendered children.
  */
@@ -55,8 +55,10 @@ export function SidebarLayout({
       <aside
         className={cn(
           'group/aside fixed inset-y-0 left-0 z-50 flex w-64 flex-col overflow-hidden bg-sidebar text-sidebar-foreground shadow-xl transition-[width,transform] duration-200',
-          // Desktop: collapsed icon rail that grows on hover; always in view.
-          'lg:w-20 lg:translate-x-0 lg:shadow-none lg:hover:w-64 lg:hover:shadow-xl',
+          // Desktop: a collapsed icon rail that grows on hover. `lg:static` takes
+          // it out of the fixed-overlay flow so the flex layout below reflows
+          // the content column to make room — nothing sits under the rail.
+          'lg:static lg:w-20 lg:translate-x-0 lg:shadow-none lg:hover:w-64',
           mobileOpen ? 'translate-x-0' : '-translate-x-full'
         )}
       >
@@ -89,7 +91,7 @@ export function SidebarLayout({
         </div>
       </aside>
 
-      <div className="flex min-w-0 flex-1 flex-col lg:pl-20">
+      <div className="flex min-w-0 flex-1 flex-col">
         <Topbar
           userName={userName}
           roleLabel={roleLabel}

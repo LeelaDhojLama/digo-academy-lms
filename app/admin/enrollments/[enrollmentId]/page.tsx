@@ -1,5 +1,4 @@
 import { BadgeDollarSign, TrendingUp, Wallet } from 'lucide-react';
-import Link from 'next/link';
 import { notFound } from 'next/navigation';
 
 import {
@@ -51,14 +50,11 @@ export default async function AdminEnrollmentDetailPage({
 
   return (
     <div className="mx-auto max-w-3xl space-y-6">
-      <Link
-        href="/admin/enrollments"
-        className="text-sm text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
-      >
-        ← Back to enrollments
-      </Link>
-
       <PageHeader
+        breadcrumbs={[
+          { label: 'Admin', href: '/admin' },
+          { label: 'Enrollments', href: '/admin/enrollments' },
+        ]}
         title={enrollment.student.name}
         description={
           <div className="flex flex-wrap items-center gap-2">

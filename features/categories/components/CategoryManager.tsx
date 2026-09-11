@@ -9,10 +9,12 @@ import {
   deleteCategory,
   renameCategory,
 } from '@/features/categories/server/actions';
+import { categoryNameSchema } from '@/features/categories/schemas';
 import { Badge } from '@/shared/components/ui/badge';
 import { Button } from '@/shared/components/ui/button';
-import { Field, FieldLabel } from '@/shared/components/ui/field';
+import { Field, FieldError, FieldLabel } from '@/shared/components/ui/field';
 import { Input } from '@/shared/components/ui/input';
+import { useConfirm } from '@/shared/hooks/use-confirm';
 import { cn } from '@/shared/utils/cn';
 
 interface ManagerLeaf {
@@ -30,22 +32,25 @@ const selectClass =
 export function CategoryManager({ tree }: { tree: ManagerNode[] }) {
   const router = useRouter();
   const [name, setName] = useState('');
+  const [nameError, setNameError] = useState<string>();
   const [parentId, setParentId] = useState('');
   const [isPending, startTransition] = useTransition();
 
   function handleAdd() {
     const trimmed = name.trim();
-    if (trimmed.length < 2) {
-      toast.error('Enter a category name (at least 2 characters).');
+    const parsed = categoryNameSchema.safeParse(trimmed);
+    if (!parsed.success) {
+      setNameError(parsed.error.issues[0]?.message);
       return;
     }
+    setNameError(undefined);
     startTransition(async () => {
       const result = await createCategory({ name: trimmed, parentId });
       if (!result.ok) {
         toast.error(result.error ?? 'Could not add category.');
         return;
       }
-      toast.success('Category added.');
+      toast.success(`Category "${trimmed}" added.`);
       setName('');
       setParentId('');
       router.refresh();
@@ -61,13 +66,17 @@ export function CategoryManager({ tree }: { tree: ManagerNode[] }) {
           subcategory (e.g. AWS → AWS Cloud Practitioner).
         </p>
         <div className="grid gap-3 sm:grid-cols-[1fr_1fr_auto] sm:items-end">
-          <Field>
+          <Field data-invalid={!!nameError}>
             <FieldLabel htmlFor="cat-name">Name</FieldLabel>
             <Input
               id="cat-name"
               value={name}
-              onChange={(e) => setName(e.target.value)}
+              onChange={(e) => {
+                setName(e.target.value);
+                setNameError(undefined);
+              }}
               placeholder="e.g. AWS Cloud Practitioner"
+              aria-invalid={!!nameError}
               onKeyDown={(e) => {
                 if (e.key === 'Enter') {
                   e.preventDefault();
@@ -75,6 +84,7 @@ export function CategoryManager({ tree }: { tree: ManagerNode[] }) {
                 }
               }}
             />
+            <FieldError>{nameError}</FieldError>
           </Field>
           <Field>
             <FieldLabel htmlFor="cat-parent">Parent</FieldLabel>
@@ -124,8 +134,10 @@ export function CategoryManager({ tree }: { tree: ManagerNode[] }) {
 
 function CategoryRow({ node, isParent = false }: { node: ManagerLeaf; isParent?: boolean }) {
   const router = useRouter();
+  const confirm = useConfirm();
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(node.name);
+  const [draftError, setDraftError] = useState<string>();
   const [isPending, startTransition] = useTransition();
 
   function save() {
@@ -134,27 +146,39 @@ function CategoryRow({ node, isParent = false }: { node: ManagerLeaf; isParent?:
       setEditing(false);
       return;
     }
+    const parsed = categoryNameSchema.safeParse(trimmed);
+    if (!parsed.success) {
+      setDraftError(parsed.error.issues[0]?.message);
+      return;
+    }
+    setDraftError(undefined);
     startTransition(async () => {
       const result = await renameCategory(node.id, { name: trimmed });
       if (!result.ok) {
         toast.error(result.error ?? 'Could not rename.');
         return;
       }
-      toast.success('Renamed.');
+      toast.success(`Category renamed to "${trimmed}".`);
       setEditing(false);
       router.refresh();
     });
   }
 
-  function remove() {
-    if (!confirm(`Delete “${node.name}”? This cannot be undone.`)) return;
+  async function remove() {
+    const ok = await confirm({
+      title: `Delete "${node.name}"?`,
+      description: 'This cannot be undone.',
+      confirmLabel: 'Delete',
+      destructive: true,
+    });
+    if (!ok) return;
     startTransition(async () => {
       const result = await deleteCategory(node.id);
       if (!result.ok) {
-        toast.error(result.error ?? 'Could not delete.');
+        toast.error(result.error ?? 'Could not delete category.');
         return;
       }
-      toast.success('Deleted.');
+      toast.success(`Category "${node.name}" deleted.`);
       router.refresh();
     });
   }
@@ -162,21 +186,29 @@ function CategoryRow({ node, isParent = false }: { node: ManagerLeaf; isParent?:
   return (
     <div className="flex items-center justify-between gap-3 px-4 py-2.5">
       {editing ? (
-        <Input
-          value={draft}
-          autoFocus
-          onChange={(e) => setDraft(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter') {
-              e.preventDefault();
-              save();
-            } else if (e.key === 'Escape') {
-              setDraft(node.name);
-              setEditing(false);
-            }
-          }}
-          className="max-w-xs"
-        />
+        <div className="flex flex-col gap-1">
+          <Input
+            value={draft}
+            autoFocus
+            aria-invalid={!!draftError}
+            onChange={(e) => {
+              setDraft(e.target.value);
+              setDraftError(undefined);
+            }}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault();
+                save();
+              } else if (e.key === 'Escape') {
+                setDraft(node.name);
+                setDraftError(undefined);
+                setEditing(false);
+              }
+            }}
+            className="max-w-xs"
+          />
+          <FieldError>{draftError}</FieldError>
+        </div>
       ) : (
         <div className="flex items-center gap-2">
           <span className={cn('text-sm', isParent && 'font-medium')}>{node.name}</span>
@@ -199,6 +231,7 @@ function CategoryRow({ node, isParent = false }: { node: ManagerLeaf; isParent?:
               variant="ghost"
               onClick={() => {
                 setDraft(node.name);
+                setDraftError(undefined);
                 setEditing(false);
               }}
               disabled={isPending}
@@ -208,7 +241,16 @@ function CategoryRow({ node, isParent = false }: { node: ManagerLeaf; isParent?:
           </>
         ) : (
           <>
-            <Button size="sm" variant="ghost" onClick={() => setEditing(true)} disabled={isPending}>
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={() => {
+                setDraft(node.name);
+                setDraftError(undefined);
+                setEditing(true);
+              }}
+              disabled={isPending}
+            >
               Rename
             </Button>
             <Button

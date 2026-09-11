@@ -36,11 +36,14 @@ const envSchema = z.object({
   GOOGLE_CLIENT_ID: z.string().optional(),
   GOOGLE_CLIENT_SECRET: z.string().optional(),
 
-  // Transactional email (Resend). When RESEND_API_KEY is set, email sends for
-  // real; otherwise dev logs to the console and prod throws (fail loudly).
-  RESEND_API_KEY: z.string().optional(),
-  /** From address, e.g. "Digo Academy <no-reply@yourdomain.com>". */
-  EMAIL_FROM: z.string().default('Digo Academy <onboarding@resend.dev>'),
+  // Transactional email via AWS SES. When SES_REGION is set, email sends for
+  // real via SES; otherwise dev logs to the console and prod throws (fail loud).
+  SES_REGION: z.string().optional(),
+  /** Explicit SES credentials; omit to use the default AWS provider chain (IAM role, env). */
+  SES_ACCESS_KEY_ID: z.string().optional(),
+  SES_SECRET_ACCESS_KEY: z.string().optional(),
+  /** Verified SES sender identity, e.g. "Digo Academy <no-reply@digo.academy>". */
+  EMAIL_FROM: z.string().default('Digo Academy <no-reply@digo.academy>'),
 
   // Mandatory MFA for instructors/admins. On by default; set to "false" to relax
   // it in local development. Any value other than "false" keeps it enforced.

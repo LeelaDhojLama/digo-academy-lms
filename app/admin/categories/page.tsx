@@ -24,6 +24,7 @@ export default async function AdminCategoriesPage() {
   return (
     <div className="space-y-6">
       <PageHeader
+        breadcrumbs={[{ label: 'Admin', href: '/admin' }]}
         icon={<FolderTree />}
         title="Categories"
         description="Organize courses into categories and subcategories. Courses are tagged to a leaf."

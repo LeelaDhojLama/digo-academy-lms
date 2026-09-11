@@ -20,6 +20,7 @@ export default async function AdminAuditPage() {
   return (
     <div className="space-y-6">
       <PageHeader
+        breadcrumbs={[{ label: 'Admin', href: '/admin' }]}
         icon={<ScrollText />}
         title="Audit log"
         description={`Latest ${entries.length} consequential action${entries.length === 1 ? '' : 's'} across the platform.`}

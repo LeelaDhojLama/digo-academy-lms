@@ -14,6 +14,7 @@ import { StatusPill, type StatusTone } from '@/shared/components/dashboard/Statu
 import { Button } from '@/shared/components/ui/button';
 import { Field, FieldLabel } from '@/shared/components/ui/field';
 import { Input } from '@/shared/components/ui/input';
+import { useConfirm } from '@/shared/hooks/use-confirm';
 import { formatMoney } from '@/shared/utils/money';
 import { cn } from '@/shared/utils/cn';
 
@@ -49,6 +50,7 @@ export function EnrollmentPayments({
   payments: PaymentRow[];
 }) {
   const router = useRouter();
+  const confirm = useConfirm();
   const [isPending, startTransition] = useTransition();
   const [amount, setAmount] = useState('');
   const [status, setStatus] = useState<PaymentStatus>('PAID');
@@ -74,7 +76,7 @@ export function EnrollmentPayments({
         toast.error(result.error ?? 'Could not record payment.');
         return;
       }
-      toast.success('Payment recorded.');
+      toast.success(`Payment of ${formatMoney(Math.round(value * 100), currency)} recorded.`);
       setAmount('');
       setMethod('');
       setReference('');
@@ -83,15 +85,21 @@ export function EnrollmentPayments({
     });
   }
 
-  function remove(id: string) {
-    if (!confirm('Delete this payment record? This cannot be undone.')) return;
+  async function remove(id: string) {
+    const ok = await confirm({
+      title: 'Delete this payment record?',
+      description: 'This cannot be undone.',
+      confirmLabel: 'Delete',
+      destructive: true,
+    });
+    if (!ok) return;
     startTransition(async () => {
       const result = await deletePayment(id);
       if (!result.ok) {
         toast.error(result.error ?? 'Could not delete payment.');
         return;
       }
-      toast.success('Payment deleted.');
+      toast.success('Payment record deleted.');
       router.refresh();
     });
   }

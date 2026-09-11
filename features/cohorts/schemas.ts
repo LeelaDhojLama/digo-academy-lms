@@ -16,8 +16,15 @@ const optionalCapacity = z
   .optional()
   .transform((value) => (value === '' || value === undefined ? null : value));
 
+const batchName = z
+  .string()
+  .trim()
+  .min(1, 'Batch name is required.')
+  .min(2, 'Batch name must be at least 2 characters.')
+  .max(80, 'Batch name is too long.');
+
 export const createBatchSchema = z.object({
-  name: z.string().trim().min(2, 'Name is too short.').max(80, 'Name is too long.'),
+  name: batchName,
   courseId: z.string().min(1, 'Choose a course.'),
   instructorId: optionalId,
   startDate: optionalDate,
@@ -29,8 +36,15 @@ export type CreateBatchInput = z.input<typeof createBatchSchema>;
 export const updateBatchSchema = createBatchSchema.extend({ id: z.string().min(1) });
 export type UpdateBatchInput = z.input<typeof updateBatchSchema>;
 
+const learningPlanName = z
+  .string()
+  .trim()
+  .min(1, 'Learning plan name is required.')
+  .min(2, 'Learning plan name must be at least 2 characters.')
+  .max(80, 'Learning plan name is too long.');
+
 export const createLearningPlanSchema = z.object({
-  name: z.string().trim().min(2, 'Name is too short.').max(80, 'Name is too long.'),
+  name: learningPlanName,
   courseId: z.string().min(1, 'Choose a course.'),
   description: z.string().trim().max(500).optional(),
 });

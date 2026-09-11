@@ -3,6 +3,7 @@
 import type { ReactNode } from 'react';
 
 import { Toaster } from '@/shared/components/ui/sonner';
+import { ConfirmProvider } from '@/shared/hooks/use-confirm';
 
 import { QueryProvider } from './QueryProvider';
 
@@ -13,8 +14,10 @@ import { QueryProvider } from './QueryProvider';
 export function Providers({ children }: { children: ReactNode }) {
   return (
     <QueryProvider>
-      {children}
-      <Toaster richColors position="top-center" />
+      <ConfirmProvider>
+        {children}
+        <Toaster richColors position="top-center" />
+      </ConfirmProvider>
     </QueryProvider>
   );
 }

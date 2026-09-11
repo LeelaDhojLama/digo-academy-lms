@@ -1,7 +1,8 @@
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
-import { CheckCircle2 } from 'lucide-react';
+import { CheckCircle2, Loader2 } from 'lucide-react';
+import { motion, useReducedMotion } from 'motion/react';
 import { useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import PhoneInput, { type Value } from 'react-phone-number-input';
@@ -42,6 +43,7 @@ const phoneInputInvalid = 'border-destructive ring-3 ring-destructive/20';
  */
 export function GuestInquiryForm({ courseId }: { courseId: string }) {
   const [submitted, setSubmitted] = useState(false);
+  const reduceMotion = useReducedMotion();
   const {
     control,
     register,
@@ -63,15 +65,26 @@ export function GuestInquiryForm({ courseId }: { courseId: string }) {
 
   if (submitted) {
     return (
-      <div className="flex items-start gap-3 rounded-xl bg-emerald-500/10 p-4 text-sm text-emerald-700 dark:text-emerald-400">
-        <CheckCircle2 className="mt-0.5 size-5 shrink-0" />
+      <motion.div
+        initial={reduceMotion ? false : { opacity: 0, y: 8, scale: 0.98 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+        className="flex items-start gap-3 rounded-xl bg-emerald-500/10 p-4 text-sm text-emerald-700 dark:text-emerald-400"
+      >
+        <motion.span
+          initial={reduceMotion ? false : { scale: 0, rotate: -45 }}
+          animate={{ scale: 1, rotate: 0 }}
+          transition={{ duration: 0.4, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
+        >
+          <CheckCircle2 className="mt-0.5 size-5 shrink-0" />
+        </motion.span>
         <div>
           <p className="font-medium">Request received!</p>
           <p className="mt-0.5">
             Thanks for your interest — our team will reach out by email shortly to help you enroll.
           </p>
         </div>
-      </div>
+      </motion.div>
     );
   }
 
@@ -162,6 +175,7 @@ export function GuestInquiryForm({ courseId }: { courseId: string }) {
       </Field>
 
       <Button type="submit" size="lg" className="w-full" disabled={isSubmitting}>
+        {isSubmitting ? <Loader2 className="size-4 animate-spin" /> : null}
         {isSubmitting ? 'Sending…' : 'Request enrollment'}
       </Button>
       <p className="text-center text-xs text-muted-foreground">

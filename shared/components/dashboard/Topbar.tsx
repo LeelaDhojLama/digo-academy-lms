@@ -1,6 +1,6 @@
 'use client';
 
-import { Bell, Menu, MessageSquare } from 'lucide-react';
+import { Bell, Menu } from 'lucide-react';
 
 function initials(name: string): string {
   const parts = name.trim().split(/\s+/).filter(Boolean);
@@ -9,25 +9,16 @@ function initials(name: string): string {
   return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
 }
 
-function IconButton({
-  label,
-  showDot,
-  children,
-}: {
-  label: string;
-  showDot?: boolean;
-  children: React.ReactNode;
-}) {
+function NotificationsButton() {
   return (
     <button
       type="button"
-      aria-label={label}
-      className="relative flex size-10 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+      disabled
+      aria-label="Notifications — coming soon"
+      title="Notifications — coming soon"
+      className="flex size-10 cursor-not-allowed items-center justify-center rounded-full text-muted-foreground/40"
     >
-      {children}
-      {showDot && (
-        <span className="absolute right-2 top-2 size-2 rounded-full bg-brand-coral ring-2 ring-background" />
-      )}
+      <Bell className="size-5" />
     </button>
   );
 }
@@ -39,9 +30,14 @@ export interface TopbarProps {
 }
 
 /**
- * Jobie-style top bar: mobile menu toggle, a rounded search pill, quick-action
- * icons (message/notifications), and a user chip. Composed from wrapper
- * components + shadcn primitives — no generated primitives are modified.
+ * Jobie-style top bar: mobile menu toggle, quick-action icons, and a user
+ * chip. Composed from wrapper components + shadcn primitives — no generated
+ * primitives are modified.
+ *
+ * No "Queries" icon here — Inquiries is already a sidebar nav item, so a
+ * second entry point in the top bar would just be a duplicate. Notifications
+ * has no backing feature yet, so it's rendered disabled rather than as a
+ * dead-looking clickable icon.
  */
 export function Topbar({ userName, roleLabel, onMenuClick }: TopbarProps) {
   return (
@@ -57,12 +53,7 @@ export function Topbar({ userName, roleLabel, onMenuClick }: TopbarProps) {
         </button>
 
         <div className="ml-auto flex items-center gap-1 sm:gap-2">
-          <IconButton label="Messages" showDot>
-            <MessageSquare className="size-5" />
-          </IconButton>
-          <IconButton label="Notifications" showDot>
-            <Bell className="size-5" />
-          </IconButton>
+          <NotificationsButton />
 
           <div className="mx-1 hidden h-8 w-px bg-border sm:block" />
 

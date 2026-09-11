@@ -23,6 +23,7 @@ export default async function AdminPaymentsPage() {
   return (
     <div className="space-y-6">
       <PageHeader
+        breadcrumbs={[{ label: 'Admin', href: '/admin' }]}
         icon={<CreditCard />}
         title="Payments"
         description={`${payments.length} record${payments.length === 1 ? '' : 's'} · ${formatMoney(collectedCents)} collected. Recorded manually per enrollment.`}

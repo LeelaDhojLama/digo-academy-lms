@@ -15,6 +15,7 @@ export default async function AdminEnrollmentsPage() {
   return (
     <div className="space-y-6">
       <PageHeader
+        breadcrumbs={[{ label: 'Admin', href: '/admin' }]}
         icon={<GraduationCap />}
         title="Enrollments"
         description={`${enrollments.length} enrollment${enrollments.length === 1 ? '' : 's'}. Assign cohorts and record payments per enrollment.`}

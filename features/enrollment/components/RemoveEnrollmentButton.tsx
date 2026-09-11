@@ -6,6 +6,7 @@ import { toast } from 'sonner';
 
 import { removeEnrollment } from '@/features/enrollment/server/actions';
 import { Button } from '@/shared/components/ui/button';
+import { useConfirm } from '@/shared/hooks/use-confirm';
 
 export function RemoveEnrollmentButton({
   enrollmentId,
@@ -15,19 +16,24 @@ export function RemoveEnrollmentButton({
   studentName: string;
 }) {
   const router = useRouter();
+  const confirm = useConfirm();
   const [isPending, startTransition] = useTransition();
 
-  function remove() {
-    if (!confirm(`Remove ${studentName}'s enrollment? This also deletes its payment records.`)) {
-      return;
-    }
+  async function remove() {
+    const ok = await confirm({
+      title: `Remove ${studentName}'s enrollment?`,
+      description: 'This also deletes its payment records. This cannot be undone.',
+      confirmLabel: 'Remove enrollment',
+      destructive: true,
+    });
+    if (!ok) return;
     startTransition(async () => {
       const result = await removeEnrollment(enrollmentId);
       if (!result.ok) {
         toast.error(result.error ?? 'Could not remove enrollment.');
         return;
       }
-      toast.success('Enrollment removed.');
+      toast.success(`${studentName}'s enrollment removed.`);
       router.push('/admin/enrollments');
       router.refresh();
     });

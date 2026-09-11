@@ -10,6 +10,7 @@ import { StatusPill } from '@/shared/components/dashboard/StatusPill';
 import { Badge } from '@/shared/components/ui/badge';
 import { Button } from '@/shared/components/ui/button';
 import { ROLES, type Role } from '@/shared/constants/roles';
+import { useConfirm } from '@/shared/hooks/use-confirm';
 import { cn } from '@/shared/utils/cn';
 
 export interface UserRow {
@@ -39,6 +40,7 @@ export function UsersTable({
   currentUserId: string;
 }) {
   const router = useRouter();
+  const confirm = useConfirm();
   const [isPending, startTransition] = useTransition();
 
   function changeRole(user: UserRow, role: Role) {
@@ -54,9 +56,17 @@ export function UsersTable({
     });
   }
 
-  function toggleStatus(user: UserRow) {
+  async function toggleStatus(user: UserRow) {
     const next = user.status === 'ACTIVE' ? 'SUSPENDED' : 'ACTIVE';
-    if (next === 'SUSPENDED' && !confirm(`Suspend ${user.name}? They will be signed out.`)) return;
+    if (next === 'SUSPENDED') {
+      const ok = await confirm({
+        title: `Suspend ${user.name}?`,
+        description: 'They will be signed out and unable to sign back in until reactivated.',
+        confirmLabel: 'Suspend',
+        destructive: true,
+      });
+      if (!ok) return;
+    }
     startTransition(async () => {
       const result = await setUserStatus(user.id, next);
       if (!result.ok) {

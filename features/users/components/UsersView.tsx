@@ -40,6 +40,7 @@ export async function UsersView({
   return (
     <div className="space-y-6">
       <PageHeader
+        breadcrumbs={[{ label: 'Admin', href: '/admin' }]}
         icon={icon}
         title={title}
         description={`${users.length} account${users.length === 1 ? '' : 's'}. ${subtitle}`}

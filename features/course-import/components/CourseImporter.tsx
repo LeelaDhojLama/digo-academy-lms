@@ -15,6 +15,8 @@ import { Badge } from '@/shared/components/ui/badge';
 import { Button } from '@/shared/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/components/ui/card';
 
+const TEMPLATE_HREF = '/admin/courses/import/template';
+
 function summarize(draft: CourseDraft) {
   let lessons = 0;
   let questions = 0;
@@ -90,6 +92,12 @@ export function CourseImporter() {
               {busy === 'analyze' ? 'Analyzing…' : 'Choose .docx'}
             </Button>
           </label>
+          <a
+            href={TEMPLATE_HREF}
+            className="text-sm font-medium text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
+          >
+            Not sure of the format? Download the template
+          </a>
         </CardContent>
       </Card>
     );

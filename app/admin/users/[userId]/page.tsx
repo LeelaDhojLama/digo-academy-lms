@@ -37,18 +37,16 @@ export default async function AdminUserDetailPage({
   };
 
   const social = (user.instructorProfile?.socialLinks ?? {}) as Record<string, string | undefined>;
-  const backHref = user.role === ROLES.STUDENT ? '/admin/users/students' : '/admin/users/instructors';
+  const usersHref = user.role === ROLES.STUDENT ? '/admin/users/students' : '/admin/users/instructors';
+  const usersLabel = user.role === ROLES.STUDENT ? 'Students' : 'Instructors';
 
   return (
     <div className="mx-auto max-w-3xl space-y-6">
-      <Link
-        href={backHref}
-        className="text-sm text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
-      >
-        ← Back to users
-      </Link>
-
       <PageHeader
+        breadcrumbs={[
+          { label: 'Admin', href: '/admin' },
+          { label: usersLabel, href: usersHref },
+        ]}
         title={user.name}
         description={
           <div className="flex flex-wrap items-center gap-2">

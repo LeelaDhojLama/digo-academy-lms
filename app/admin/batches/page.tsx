@@ -35,6 +35,7 @@ export default async function AdminBatchesPage() {
   return (
     <div className="space-y-6">
       <PageHeader
+        breadcrumbs={[{ label: 'Admin', href: '/admin' }]}
         icon={<Users />}
         title="Batches"
         description="Group-class cohorts for live (group) enrollments. Assign an instructor and schedule."

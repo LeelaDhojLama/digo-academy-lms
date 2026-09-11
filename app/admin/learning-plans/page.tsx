@@ -25,6 +25,7 @@ export default async function AdminLearningPlansPage() {
   return (
     <div className="space-y-6">
       <PageHeader
+        breadcrumbs={[{ label: 'Admin', href: '/admin' }]}
         icon={<Map />}
         title="Learning plans"
         description="Structured plans for self-paced enrollments (materials-only, no live sessions)."

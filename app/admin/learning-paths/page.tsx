@@ -30,6 +30,7 @@ export default async function LearningPathsPage({
   return (
     <div className="space-y-6">
       <PageHeader
+        breadcrumbs={[{ label: 'Admin', href: '/admin' }]}
         icon={<Megaphone />}
         title="Learning paths"
         description="Group students by the course they're learning or interested in, then export the list to reach out about discounts and offers."

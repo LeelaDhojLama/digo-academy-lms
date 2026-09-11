@@ -3,8 +3,9 @@ import { z } from 'zod';
 export const categoryNameSchema = z
   .string()
   .trim()
-  .min(2, 'Name is too short')
-  .max(60, 'Name is too long');
+  .min(1, 'Category name is required.')
+  .min(2, 'Category name must be at least 2 characters.')
+  .max(60, 'Category name is too long.');
 
 export const createCategorySchema = z.object({
   name: categoryNameSchema,

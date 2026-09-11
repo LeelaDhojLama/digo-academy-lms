@@ -16,6 +16,7 @@ export default async function AdminCoursesPage() {
   return (
     <div className="space-y-6">
       <PageHeader
+        breadcrumbs={[{ label: 'Admin', href: '/admin' }]}
         icon={<BookOpen />}
         title="Courses"
         description={`Manage every course. ${needsReview > 0 ? `${needsReview} awaiting review.` : 'Nothing awaiting review.'}`}

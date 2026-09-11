@@ -39,6 +39,7 @@ export default async function AdminInquiriesPage() {
   return (
     <div className="space-y-6">
       <PageHeader
+        breadcrumbs={[{ label: 'Admin', href: '/admin' }]}
         icon={<Inbox />}
         title="Inquiries"
         description={`${inquiries.length} total · ${open} open. Walk each through New → Contacted → Confirmed, then enroll.`}

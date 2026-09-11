@@ -21,6 +21,8 @@ import { DIFFICULTY_LABELS, type MarketplaceDifficulty } from '@/features/market
 import { getSession } from '@/lib/auth/session';
 import { Panel } from '@/shared/components/dashboard/Panel';
 import { RichTextContent } from '@/shared/components/dashboard/RichTextContent';
+import { Reveal } from '@/shared/components/public/Reveal';
+import { StaggerGroup, StaggerItem } from '@/shared/components/public/Stagger';
 import { Button } from '@/shared/components/ui/button';
 import { ROLES } from '@/shared/constants/roles';
 import { formatMoney } from '@/shared/utils/money';
@@ -111,7 +113,7 @@ export default async function PublicCourseDetailPage({
         {/* Main column                                                    */}
         {/* -------------------------------------------------------------- */}
         <div className="space-y-8">
-          <div>
+          <Reveal>
             <h1 className="font-heading text-3xl font-semibold leading-tight tracking-tight sm:text-4xl">
               {course.title}
             </h1>
@@ -144,34 +146,37 @@ export default async function PublicCourseDetailPage({
               </span>
               <span className="uppercase">{course.language}</span>
             </div>
-          </div>
+          </Reveal>
 
           {/* Video / preview */}
-          <div className="relative aspect-video overflow-hidden rounded-2xl border border-border/70 bg-muted shadow-sm">
+          <Reveal delay={80} className="group relative aspect-video overflow-hidden rounded-2xl border border-border/70 bg-muted shadow-sm">
             <CourseThumbnail title={course.title} url={course.thumbnailUrl} />
-            <div className="absolute inset-0 flex items-center justify-center bg-black/20">
-              <span className="flex size-16 items-center justify-center rounded-full bg-white/90 text-brand-blue shadow-lg">
+            <div className="absolute inset-0 flex items-center justify-center bg-black/20 transition-colors duration-300 group-hover:bg-black/30">
+              <span className="flex size-16 items-center justify-center rounded-full bg-white/90 text-brand-blue shadow-lg transition-transform duration-300 group-hover:scale-110">
                 <PlayCircle className="size-8" />
               </span>
             </div>
             <span className="absolute bottom-3 left-3 rounded-full bg-black/60 px-3 py-1 text-xs font-medium text-white backdrop-blur">
               Preview this course
             </span>
-          </div>
+          </Reveal>
 
           {/* About */}
           {course.description?.trim() ? (
-            <section>
-              <h2 className="font-heading text-xl font-semibold tracking-tight">
-                About this course
-              </h2>
-              <div className="mt-3">
-                <RichTextContent html={course.description} />
-              </div>
-            </section>
+            <Reveal>
+              <section>
+                <h2 className="font-heading text-xl font-semibold tracking-tight">
+                  About this course
+                </h2>
+                <div className="mt-3">
+                  <RichTextContent html={course.description} />
+                </div>
+              </section>
+            </Reveal>
           ) : null}
 
           {/* Syllabus */}
+          <Reveal>
           <section>
             <div className="flex flex-wrap items-end justify-between gap-2">
               <h2 className="font-heading text-xl font-semibold tracking-tight">Course syllabus</h2>
@@ -210,40 +215,46 @@ export default async function PublicCourseDetailPage({
                         </span>
                         <ChevronDown className="size-4 shrink-0 text-muted-foreground transition-transform group-open:rotate-180" />
                       </summary>
-                      <ul className="divide-y divide-border/60 border-t border-border/60">
-                        {section.lessons.map((lesson) => {
-                          const Icon =
-                            LESSON_ICONS[lesson.type as keyof typeof LESSON_ICONS] ?? BookOpen;
-                          const duration = formatDuration(lesson.videoDurationSec ?? 0);
-                          return (
-                            <li
-                              key={lesson.id}
-                              className="flex items-center gap-3 px-5 py-3 text-sm"
-                            >
-                              <Icon className="size-4 shrink-0 text-brand-blue/70" />
-                              <span className="flex-1 truncate">{lesson.title}</span>
-                              {duration ? (
-                                <span className="shrink-0 text-xs text-muted-foreground">
-                                  {duration}
-                                </span>
-                              ) : null}
-                            </li>
-                          );
-                        })}
-                        {section.lessons.length === 0 ? (
-                          <li className="px-5 py-3 text-sm text-muted-foreground">
-                            No lessons yet.
-                          </li>
-                        ) : null}
-                      </ul>
+                      <div className="grid grid-rows-[0fr] border-t border-border/60 transition-[grid-template-rows] duration-300 ease-out group-open:grid-rows-[1fr] motion-reduce:transition-none">
+                        <div className="overflow-hidden">
+                          <ul className="divide-y divide-border/60">
+                            {section.lessons.map((lesson) => {
+                              const Icon =
+                                LESSON_ICONS[lesson.type as keyof typeof LESSON_ICONS] ?? BookOpen;
+                              const duration = formatDuration(lesson.videoDurationSec ?? 0);
+                              return (
+                                <li
+                                  key={lesson.id}
+                                  className="flex items-center gap-3 px-5 py-3 text-sm"
+                                >
+                                  <Icon className="size-4 shrink-0 text-brand-blue/70" />
+                                  <span className="flex-1 truncate">{lesson.title}</span>
+                                  {duration ? (
+                                    <span className="shrink-0 text-xs text-muted-foreground">
+                                      {duration}
+                                    </span>
+                                  ) : null}
+                                </li>
+                              );
+                            })}
+                            {section.lessons.length === 0 ? (
+                              <li className="px-5 py-3 text-sm text-muted-foreground">
+                                No lessons yet.
+                              </li>
+                            ) : null}
+                          </ul>
+                        </div>
+                      </div>
                     </details>
                   );
                 })}
               </div>
             )}
           </section>
+          </Reveal>
 
           {/* Instructor */}
+          <Reveal>
           <section>
             <h2 className="font-heading text-xl font-semibold tracking-tight">Your instructor</h2>
             <Panel className="mt-4">
@@ -283,9 +294,11 @@ export default async function PublicCourseDetailPage({
               </div>
             </Panel>
           </section>
+          </Reveal>
 
           {/* Student feedback */}
           {course.reviews.length > 0 ? (
+            <Reveal>
             <section>
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <h2 className="font-heading text-xl font-semibold tracking-tight">
@@ -312,38 +325,41 @@ export default async function PublicCourseDetailPage({
                   </span>
                 ) : null}
               </div>
-              <div className="mt-4 grid gap-4 sm:grid-cols-2">
+              <StaggerGroup className="mt-4 grid gap-4 sm:grid-cols-2">
                 {course.reviews.map((review) => (
-                  <Panel key={review.id} className="p-5">
-                    <div className="flex items-center gap-3">
-                      <span className="flex size-9 items-center justify-center rounded-full bg-brand-blue/10 text-xs font-semibold text-brand-blue">
-                        {initials(review.student.name)}
-                      </span>
-                      <div className="min-w-0">
-                        <p className="truncate text-sm font-medium">{review.student.name}</p>
-                        <span className="flex items-center gap-0.5">
-                          {Array.from({ length: 5 }).map((_, i) => (
-                            <Star
-                              key={i}
-                              className={
-                                i < review.rating
-                                  ? 'size-3 fill-amber-400 text-amber-400'
-                                  : 'size-3 text-muted-foreground/40'
-                              }
-                            />
-                          ))}
+                  <StaggerItem key={review.id}>
+                    <Panel className="p-5">
+                      <div className="flex items-center gap-3">
+                        <span className="flex size-9 items-center justify-center rounded-full bg-brand-blue/10 text-xs font-semibold text-brand-blue">
+                          {initials(review.student.name)}
                         </span>
+                        <div className="min-w-0">
+                          <p className="truncate text-sm font-medium">{review.student.name}</p>
+                          <span className="flex items-center gap-0.5">
+                            {Array.from({ length: 5 }).map((_, i) => (
+                              <Star
+                                key={i}
+                                className={
+                                  i < review.rating
+                                    ? 'size-3 fill-amber-400 text-amber-400'
+                                    : 'size-3 text-muted-foreground/40'
+                                }
+                              />
+                            ))}
+                          </span>
+                        </div>
                       </div>
-                    </div>
-                    {review.text ? (
-                      <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
-                        “{review.text}”
-                      </p>
-                    ) : null}
-                  </Panel>
+                      {review.text ? (
+                        <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
+                          “{review.text}”
+                        </p>
+                      ) : null}
+                    </Panel>
+                  </StaggerItem>
                 ))}
-              </div>
+              </StaggerGroup>
             </section>
+            </Reveal>
           ) : null}
         </div>
 
@@ -351,7 +367,7 @@ export default async function PublicCourseDetailPage({
         {/* Purchase sidebar                                               */}
         {/* -------------------------------------------------------------- */}
         <aside>
-          <div className="lg:sticky lg:top-24">
+          <Reveal delay={120} className="lg:sticky lg:top-24">
             <Panel className="space-y-5">
               <div className="flex items-baseline gap-2">
                 <span className="font-heading text-3xl font-semibold">
@@ -401,8 +417,7 @@ export default async function PublicCourseDetailPage({
                 {profile?.headline ? ` · ${profile.headline}` : ''}
               </p>
             </Panel>
-
-          </div>
+          </Reveal>
         </aside>
       </div>
     </div>

@@ -34,7 +34,10 @@ import {
   getPublishedCourses,
 } from '@/features/marketplace/server/data';
 import type { CourseFilters } from '@/features/marketplace/schemas';
+import { CountUp } from '@/shared/components/public/CountUp';
+import { HeroHeadline, HeroItem, HeroPreview, HeroStage, Magnetic } from '@/shared/components/public/HeroMotion';
 import { Reveal } from '@/shared/components/public/Reveal';
+import { StaggerGroup, StaggerItem } from '@/shared/components/public/Stagger';
 import { Button } from '@/shared/components/ui/button';
 import { cn } from '@/shared/utils/cn';
 
@@ -195,10 +198,10 @@ export default async function HomePage() {
   const featured = courses.slice(0, 8);
 
   const statBand = [
-    { label: 'Courses', value: `${compactNumber(stats.courses)}+`, icon: BookOpen },
-    { label: 'Students', value: `${compactNumber(stats.students)}+`, icon: Users },
-    { label: 'Instructors', value: `${compactNumber(stats.instructors)}+`, icon: GraduationCap },
-    { label: 'Categories', value: `${stats.categories}+`, icon: BarChart3 },
+    { label: 'Courses', raw: stats.courses, icon: BookOpen },
+    { label: 'Students', raw: stats.students, icon: Users },
+    { label: 'Instructors', raw: stats.instructors, icon: GraduationCap },
+    { label: 'Categories', raw: stats.categories, icon: BarChart3 },
   ];
 
   return (
@@ -207,33 +210,48 @@ export default async function HomePage() {
       {/* Hero                                                               */}
       {/* ------------------------------------------------------------------ */}
       <section className="relative overflow-hidden bg-linear-to-b from-brand-blue/5 via-background to-background">
-        <div className="pointer-events-none absolute -left-32 -top-32 size-80 rounded-full bg-brand-blue/10 blur-3xl" />
-        <div className="pointer-events-none absolute -right-24 top-10 size-72 rounded-full bg-violet-500/10 blur-3xl" />
-        <div className="relative mx-auto w-full max-w-6xl px-4 pt-16 text-center sm:px-6 lg:pt-24">
-          <span className="inline-flex items-center gap-1.5 rounded-full border border-brand-blue/20 bg-brand-blue/10 px-3 py-1 text-xs font-medium text-brand-blue">
-            <Sparkles className="size-3.5" />
-            Live mentorship meets self-paced freedom
-          </span>
-          <h1 className="mx-auto mt-6 max-w-3xl font-heading text-4xl font-semibold leading-[1.1] tracking-tight sm:text-5xl lg:text-6xl">
-            Master skills with{' '}
-            <span className="text-brand-blue">live mentorship</span> &amp; self-paced freedom
-          </h1>
-          <p className="mx-auto mt-5 max-w-2xl text-lg text-muted-foreground">
-            Join {compactNumber(stats.students)}+ learners accelerating their careers with real-time
-            feedback and high-quality on-demand curriculum.
-          </p>
-          <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
-            <Button
-              size="lg"
-              className="rounded-full px-7 shadow-sm transition-transform hover:scale-105"
-              nativeButton={false}
-              render={
-                <Link href="/courses">
-                  Browse courses
-                  <ArrowRight className="size-4" />
-                </Link>
-              }
-            />
+        <div className="animate-blob pointer-events-none absolute -left-32 -top-32 size-80 rounded-full bg-brand-blue/10 blur-3xl" />
+        <div className="animate-blob anim-delay-2 pointer-events-none absolute -right-24 top-10 size-72 rounded-full bg-violet-500/10 blur-3xl" />
+        <HeroStage className="relative mx-auto w-full max-w-6xl px-4 pt-16 text-center sm:px-6 lg:pt-24">
+          <HeroItem>
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-brand-blue/20 bg-brand-blue/10 px-3 py-1 text-xs font-medium text-brand-blue">
+              <Sparkles className="size-3.5" />
+              Live mentorship meets self-paced freedom
+            </span>
+          </HeroItem>
+          <HeroHeadline
+            className="mx-auto mt-6 max-w-3xl font-heading text-4xl font-semibold leading-[1.1] tracking-tight sm:text-5xl lg:text-6xl"
+            segments={[
+              { text: 'Master' },
+              { text: 'skills' },
+              { text: 'with' },
+              { text: 'live', accent: true },
+              { text: 'mentorship', accent: true },
+              { text: '&' },
+              { text: 'self-paced' },
+              { text: 'freedom' },
+            ]}
+          />
+          <HeroItem>
+            <p className="mx-auto mt-5 max-w-2xl text-lg text-muted-foreground">
+              Join {compactNumber(stats.students)}+ learners accelerating their careers with real-time
+              feedback and high-quality on-demand curriculum.
+            </p>
+          </HeroItem>
+          <HeroItem className="mt-8 flex flex-wrap items-center justify-center gap-3">
+            <Magnetic>
+              <Button
+                size="lg"
+                className="rounded-full px-7 shadow-sm"
+                nativeButton={false}
+                render={
+                  <Link href="/courses">
+                    Browse courses
+                    <ArrowRight className="size-4" />
+                  </Link>
+                }
+              />
+            </Magnetic>
             <Button
               size="lg"
               variant="outline"
@@ -241,10 +259,10 @@ export default async function HomePage() {
               nativeButton={false}
               render={<Link href="/register">Create free account</Link>}
             />
-          </div>
+          </HeroItem>
 
           {/* Framed product preview */}
-          <div className="relative mx-auto mt-14 max-w-4xl pb-16" aria-hidden>
+          <HeroPreview className="relative mx-auto mt-14 max-w-4xl pb-16" aria-hidden>
             <div className="overflow-hidden rounded-2xl border border-border/70 bg-card text-left shadow-2xl">
               <div className="flex items-center gap-1.5 border-b border-border/60 bg-muted/40 px-4 py-3">
                 <span className="size-2.5 rounded-full bg-brand-coral/70" />
@@ -303,8 +321,8 @@ export default async function HomePage() {
                 </div>
               </div>
             </div>
-          </div>
-        </div>
+          </HeroPreview>
+        </HeroStage>
       </section>
 
       {/* ------------------------------------------------------------------ */}
@@ -312,7 +330,7 @@ export default async function HomePage() {
       {/* ------------------------------------------------------------------ */}
       <section className="bg-slate-950 text-white">
         <div className="mx-auto grid w-full max-w-6xl items-center gap-10 px-4 py-16 sm:px-6 lg:grid-cols-2 lg:px-8 lg:py-20">
-          <div>
+          <Reveal>
             <span className="text-sm font-semibold uppercase tracking-wide text-brand-blue-light">
               Dual-learning
             </span>
@@ -349,9 +367,9 @@ export default async function HomePage() {
                 </div>
               </div>
             </div>
-          </div>
+          </Reveal>
 
-          <div className="relative">
+          <Reveal delay={150} className="relative">
             <div className="relative overflow-hidden rounded-3xl bg-linear-to-br from-brand-blue via-indigo-600 to-violet-600 p-8 shadow-2xl">
               <div className="pointer-events-none absolute -right-10 -top-10 size-40 rounded-full bg-white/10 blur-3xl" />
               <p className="font-heading text-3xl font-semibold tracking-tight">
@@ -371,7 +389,7 @@ export default async function HomePage() {
               </div>
             </div>
             {/* floating chip */}
-            <div className="absolute -bottom-5 left-6 flex items-center gap-2.5 rounded-2xl bg-card p-3 pr-4 text-foreground shadow-xl ring-1 ring-border/60">
+            <div className="animate-floaty absolute -bottom-5 left-6 flex items-center gap-2.5 rounded-2xl bg-card p-3 pr-4 text-foreground shadow-xl ring-1 ring-border/60">
               <span className="flex size-9 items-center justify-center rounded-xl bg-emerald-500/15 text-emerald-600">
                 <Radio className="size-5" />
               </span>
@@ -380,7 +398,7 @@ export default async function HomePage() {
                 <p className="mt-1 text-xs text-muted-foreground">Enrolling now</p>
               </div>
             </div>
-          </div>
+          </Reveal>
         </div>
       </section>
 
@@ -398,12 +416,12 @@ export default async function HomePage() {
             </h2>
             <p className="mt-2 text-muted-foreground">Find the right path for your goals.</p>
           </Reveal>
-          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+          <StaggerGroup className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
             {categories.map((category, index) => {
               const style = CATEGORY_STYLES[index % CATEGORY_STYLES.length];
               const Icon = style.icon;
               return (
-                <Reveal key={category.id} delay={index * 60}>
+                <StaggerItem key={category.id}>
                   <Link
                     href={`/courses?category=${category.id}`}
                     className="group relative flex h-full items-center gap-3 overflow-hidden rounded-2xl bg-card p-4 shadow-sm ring-1 ring-border/60 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg hover:ring-brand-blue/30"
@@ -426,10 +444,10 @@ export default async function HomePage() {
                     </span>
                     <ArrowRight className="ml-auto size-4 shrink-0 text-muted-foreground opacity-0 transition-all duration-300 group-hover:translate-x-0.5 group-hover:opacity-100" />
                   </Link>
-                </Reveal>
+                </StaggerItem>
               );
             })}
-          </div>
+          </StaggerGroup>
         </section>
       )}
 
@@ -449,11 +467,11 @@ export default async function HomePage() {
               From browsing to your first lesson in three easy steps.
             </p>
           </Reveal>
-          <div className="relative grid gap-6 md:grid-cols-3">
+          <StaggerGroup className="relative grid gap-6 md:grid-cols-3" staggerChildren={0.15}>
             {/* connector line */}
             <div className="pointer-events-none absolute left-0 right-0 top-11 hidden border-t-2 border-dashed border-brand-blue/20 md:block" />
             {STEPS.map((step, index) => (
-              <Reveal key={step.title} delay={index * 120}>
+              <StaggerItem key={step.title}>
                 <div className="relative h-full rounded-2xl bg-card p-6 shadow-sm ring-1 ring-border/60 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg">
                   <span className="absolute right-5 top-5 font-heading text-5xl font-bold text-brand-blue/10">
                     {index + 1}
@@ -464,9 +482,9 @@ export default async function HomePage() {
                   <h3 className="mt-5 font-heading text-lg font-semibold">{step.title}</h3>
                   <p className="mt-2 text-sm text-muted-foreground">{step.body}</p>
                 </div>
-              </Reveal>
+              </StaggerItem>
             ))}
-          </div>
+          </StaggerGroup>
         </div>
       </section>
 
@@ -505,13 +523,13 @@ export default async function HomePage() {
               </Link>
             </div>
           </Reveal>
-          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-            {featured.map((course, index) => (
-              <Reveal key={course.id} delay={(index % 4) * 80}>
+          <StaggerGroup className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+            {featured.map((course) => (
+              <StaggerItem key={course.id}>
                 <CourseCard course={course} hrefBase="/courses" showWishlist={false} />
-              </Reveal>
+              </StaggerItem>
             ))}
-          </div>
+          </StaggerGroup>
         </section>
       )}
 
@@ -532,9 +550,9 @@ export default async function HomePage() {
               recognized results.
             </p>
           </Reveal>
-          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-            {FEATURES.map((feature, index) => (
-              <Reveal key={feature.title} delay={index * 80}>
+          <StaggerGroup className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+            {FEATURES.map((feature) => (
+              <StaggerItem key={feature.title}>
                 <div className="group h-full rounded-2xl bg-card p-6 shadow-sm ring-1 ring-border/60 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg">
                   <span
                     className={cn(
@@ -547,9 +565,9 @@ export default async function HomePage() {
                   <h3 className="mt-4 font-heading text-base font-semibold">{feature.title}</h3>
                   <p className="mt-2 text-sm text-muted-foreground">{feature.body}</p>
                 </div>
-              </Reveal>
+              </StaggerItem>
             ))}
-          </div>
+          </StaggerGroup>
         </div>
       </section>
 
@@ -567,9 +585,9 @@ export default async function HomePage() {
             </h2>
             <p className="mt-2 text-muted-foreground">Learn from experienced practitioners.</p>
           </Reveal>
-          <div className="grid grid-cols-2 gap-5 sm:grid-cols-3 lg:grid-cols-4">
-            {instructors.map((instructor, index) => (
-              <Reveal key={instructor.id} delay={(index % 4) * 80}>
+          <StaggerGroup className="grid grid-cols-2 gap-5 sm:grid-cols-3 lg:grid-cols-4">
+            {instructors.map((instructor) => (
+              <StaggerItem key={instructor.id}>
                 <div className="group relative flex flex-col items-center overflow-hidden rounded-2xl bg-card p-6 text-center shadow-sm ring-1 ring-border/60 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg">
                   <div className="pointer-events-none absolute inset-x-0 top-0 h-16 bg-linear-to-b from-brand-blue/10 to-transparent" />
                   <span className="relative flex size-16 items-center justify-center rounded-full bg-linear-to-br from-brand-blue to-violet-500 text-lg font-semibold text-white shadow-md ring-4 ring-card">
@@ -586,9 +604,9 @@ export default async function HomePage() {
                     </span>
                   ) : null}
                 </div>
-              </Reveal>
+              </StaggerItem>
             ))}
-          </div>
+          </StaggerGroup>
         </section>
       )}
 
@@ -608,9 +626,9 @@ export default async function HomePage() {
               Get your questions answered and stay motivated by mentors and fellow students.
             </p>
           </Reveal>
-          <div className="grid gap-5 md:grid-cols-3">
-            {TESTIMONIALS.map((testimonial, index) => (
-              <Reveal key={testimonial.name} delay={index * 100}>
+          <StaggerGroup className="grid gap-5 md:grid-cols-3">
+            {TESTIMONIALS.map((testimonial) => (
+              <StaggerItem key={testimonial.name}>
                 <figure className="flex h-full flex-col rounded-2xl bg-card p-6 shadow-sm ring-1 ring-border/60 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg">
                   <Quote className="size-8 text-brand-blue/25" />
                   <blockquote className="mt-3 flex-1 text-sm leading-relaxed text-foreground">
@@ -631,9 +649,9 @@ export default async function HomePage() {
                     </span>
                   </div>
                 </figure>
-              </Reveal>
+              </StaggerItem>
             ))}
-          </div>
+          </StaggerGroup>
         </div>
       </section>
 
@@ -642,19 +660,22 @@ export default async function HomePage() {
       {/* ------------------------------------------------------------------ */}
       <section className="bg-brand-blue/5">
         <div className="mx-auto w-full max-w-6xl px-4 py-14 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-2 gap-6 lg:grid-cols-4">
-            {statBand.map((stat, index) => (
-              <Reveal key={stat.label} delay={index * 80} className="text-center">
+          <StaggerGroup className="grid grid-cols-2 gap-6 lg:grid-cols-4">
+            {statBand.map((stat) => (
+              <StaggerItem key={stat.label} className="text-center">
                 <span className="mx-auto flex size-12 items-center justify-center rounded-2xl bg-linear-to-br from-brand-blue to-violet-500 text-white shadow-md [&_svg]:size-6">
                   <stat.icon />
                 </span>
-                <p className="mt-3 font-heading text-3xl font-semibold tracking-tight sm:text-4xl">
-                  {stat.value}
-                </p>
+                <CountUp
+                  value={stat.raw}
+                  suffix="+"
+                  compact
+                  className="mt-3 block font-heading text-3xl font-semibold tracking-tight tabular-nums sm:text-4xl"
+                />
                 <p className="text-sm text-muted-foreground">{stat.label}</p>
-              </Reveal>
+              </StaggerItem>
             ))}
-          </div>
+          </StaggerGroup>
         </div>
       </section>
 
@@ -674,9 +695,9 @@ export default async function HomePage() {
               Everything you need to know before you get started.
             </p>
           </Reveal>
-          <div className="space-y-3">
-            {FAQS.map((faq, index) => (
-              <Reveal key={faq.q} delay={index * 60}>
+          <StaggerGroup className="space-y-3">
+            {FAQS.map((faq) => (
+              <StaggerItem key={faq.q}>
                 <details className="group rounded-2xl border border-border/60 bg-card px-5 shadow-sm transition-colors open:ring-1 open:ring-brand-blue/20">
                   <summary className="flex cursor-pointer list-none items-center justify-between gap-4 py-4 font-medium [&::-webkit-details-marker]:hidden">
                     {faq.q}
@@ -684,11 +705,15 @@ export default async function HomePage() {
                       <Plus className="size-4" />
                     </span>
                   </summary>
-                  <p className="pb-5 text-sm leading-relaxed text-muted-foreground">{faq.a}</p>
+                  <div className="grid grid-rows-[0fr] transition-[grid-template-rows] duration-300 ease-out group-open:grid-rows-[1fr] motion-reduce:transition-none">
+                    <div className="overflow-hidden">
+                      <p className="pb-5 text-sm leading-relaxed text-muted-foreground">{faq.a}</p>
+                    </div>
+                  </div>
                 </details>
-              </Reveal>
+              </StaggerItem>
             ))}
-          </div>
+          </StaggerGroup>
         </div>
       </section>
 

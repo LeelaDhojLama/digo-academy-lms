@@ -17,7 +17,13 @@ export default async function AdminNewCoursePage() {
 
   return (
     <div className="mx-auto max-w-2xl space-y-6">
-      <PageHeader title="New course" />
+      <PageHeader
+        breadcrumbs={[
+          { label: 'Admin', href: '/admin' },
+          { label: 'Courses', href: '/admin/courses' },
+        ]}
+        title="New course"
+      />
       <Card>
         <CardHeader>
           <CardTitle>Course details</CardTitle>

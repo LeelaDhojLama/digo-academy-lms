@@ -17,6 +17,7 @@ import { Badge } from '@/shared/components/ui/badge';
 import { Button } from '@/shared/components/ui/button';
 import { Input } from '@/shared/components/ui/input';
 import { ROLES, type Role } from '@/shared/constants/roles';
+import { useConfirm } from '@/shared/hooks/use-confirm';
 
 export interface AccountPanelUser {
   id: string;
@@ -55,6 +56,7 @@ export function UserAccountPanel({
   currentUserId: string;
 }) {
   const router = useRouter();
+  const confirm = useConfirm();
   const [isPending, startTransition] = useTransition();
   const [editingName, setEditingName] = useState(false);
   const [name, setName] = useState(user.name);
@@ -83,21 +85,27 @@ export function UserAccountPanel({
         toast.error(result.error ?? 'Could not rename.');
         return;
       }
-      toast.success('Name updated.');
+      toast.success(`Name updated to "${trimmed}".`);
       setEditingName(false);
       router.refresh();
     });
   }
 
-  function deleteUser() {
-    if (!confirm(`Delete ${user.name}? This permanently removes their account.`)) return;
+  async function deleteUser() {
+    const ok = await confirm({
+      title: `Delete ${user.name}?`,
+      description: 'This permanently removes their account. This cannot be undone.',
+      confirmLabel: 'Delete user',
+      destructive: true,
+    });
+    if (!ok) return;
     startTransition(async () => {
       const result = await adminDeleteUser(user.id);
       if (!result.ok) {
         toast.error(result.error ?? 'Could not delete user.');
         return;
       }
-      toast.success('User deleted.');
+      toast.success(`${user.name} deleted.`);
       router.push(user.role === ROLES.STUDENT ? '/admin/users/students' : '/admin/users/instructors');
       router.refresh();
     });

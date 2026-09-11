@@ -7,6 +7,7 @@ import { toast } from 'sonner';
 
 import { deleteReview } from '@/features/reviews/server/actions';
 import { Button } from '@/shared/components/ui/button';
+import { useConfirm } from '@/shared/hooks/use-confirm';
 
 export interface ReviewRow {
   id: string;
@@ -31,17 +32,24 @@ function Stars({ rating }: { rating: number }) {
 
 export function ReviewsTable({ reviews }: { reviews: ReviewRow[] }) {
   const router = useRouter();
+  const confirm = useConfirm();
   const [isPending, startTransition] = useTransition();
 
-  function remove(row: ReviewRow) {
-    if (!confirm(`Delete ${row.studentName}'s review of “${row.courseTitle}”?`)) return;
+  async function remove(row: ReviewRow) {
+    const ok = await confirm({
+      title: `Delete ${row.studentName}'s review?`,
+      description: `Their review of "${row.courseTitle}" will be permanently removed.`,
+      confirmLabel: 'Delete',
+      destructive: true,
+    });
+    if (!ok) return;
     startTransition(async () => {
       const result = await deleteReview(row.id);
       if (!result.ok) {
         toast.error(result.error ?? 'Could not delete review.');
         return;
       }
-      toast.success('Review removed.');
+      toast.success(`Review removed from "${row.courseTitle}".`);
       router.refresh();
     });
   }

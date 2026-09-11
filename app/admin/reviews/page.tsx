@@ -24,6 +24,7 @@ export default async function AdminReviewsPage() {
   return (
     <div className="space-y-6">
       <PageHeader
+        breadcrumbs={[{ label: 'Admin', href: '/admin' }]}
         icon={<Star />}
         title="Reviews"
         description={`${reviews.length} review${reviews.length === 1 ? '' : 's'}. Remove inappropriate content — ratings recompute automatically.`}

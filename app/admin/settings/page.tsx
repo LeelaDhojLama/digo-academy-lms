@@ -13,6 +13,7 @@ export default async function AdminSettingsPage() {
   return (
     <div className="mx-auto max-w-3xl space-y-6">
       <PageHeader
+        breadcrumbs={[{ label: 'Admin', href: '/admin' }]}
         icon={<Settings />}
         title="Platform settings"
         description="Global configuration. Changes take effect immediately and are audited."

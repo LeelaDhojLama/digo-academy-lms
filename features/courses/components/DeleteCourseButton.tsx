@@ -7,6 +7,7 @@ import { toast } from 'sonner';
 
 import { deleteCourse } from '@/features/courses/server/actions';
 import { Button } from '@/shared/components/ui/button';
+import { useConfirm } from '@/shared/hooks/use-confirm';
 
 export function DeleteCourseButton({
   courseId,
@@ -16,23 +17,24 @@ export function DeleteCourseButton({
   courseTitle: string;
 }) {
   const router = useRouter();
+  const confirm = useConfirm();
   const [isPending, startTransition] = useTransition();
 
-  function remove() {
-    if (
-      !confirm(
-        `Delete "${courseTitle}"? This permanently removes the course and its curriculum. This cannot be undone.`
-      )
-    ) {
-      return;
-    }
+  async function remove() {
+    const ok = await confirm({
+      title: `Delete "${courseTitle}"?`,
+      description: 'This permanently removes the course and its curriculum. This cannot be undone.',
+      confirmLabel: 'Delete course',
+      destructive: true,
+    });
+    if (!ok) return;
     startTransition(async () => {
       const result = await deleteCourse(courseId);
       if (!result.ok) {
         toast.error(result.error ?? 'Could not delete course.');
         return;
       }
-      toast.success('Course deleted.');
+      toast.success(`"${courseTitle}" deleted.`);
       router.push('/admin/courses');
       router.refresh();
     });
