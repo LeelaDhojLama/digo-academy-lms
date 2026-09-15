@@ -36,6 +36,12 @@ const envSchema = z.object({
   GOOGLE_CLIENT_ID: z.string().optional(),
   GOOGLE_CLIENT_SECRET: z.string().optional(),
 
+  // Google Meet integration: a separate OAuth client (Calendar API scope) used to
+  // create Meet-enabled Calendar events server-side, distinct from the login
+  // credentials above. One shared Google account connects once in /admin/settings.
+  GOOGLE_MEET_CLIENT_ID: z.string().optional(),
+  GOOGLE_MEET_CLIENT_SECRET: z.string().optional(),
+
   // Transactional email via AWS SES. When SES_REGION is set, email sends for
   // real via SES; otherwise dev logs to the console and prod throws (fail loud).
   SES_REGION: z.string().optional(),
@@ -79,6 +85,10 @@ export const env = parseEnv();
 /** Google social login is available only when both credentials are configured. */
 export const isGoogleAuthEnabled =
   !!env.GOOGLE_CLIENT_ID && !!env.GOOGLE_CLIENT_SECRET;
+
+/** Google Meet integration is available once its OAuth client is configured. */
+export const isMeetConfigured =
+  !!env.GOOGLE_MEET_CLIENT_ID && !!env.GOOGLE_MEET_CLIENT_SECRET;
 
 /** Uploads are available only when a bucket + credentials are configured. */
 export const isS3Configured =

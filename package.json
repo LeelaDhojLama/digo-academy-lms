@@ -40,6 +40,8 @@
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "docx": "^9.7.1",
+    "google-auth-library": "^11.0.2",
+    "googleapis": "^181.0.0",
     "libphonenumber-js": "^1.13.11",
     "lucide-react": "^1.24.0",
     "mammoth": "^1.12.1",

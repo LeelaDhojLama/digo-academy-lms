@@ -622,6 +622,18 @@ model LiveClass {
   @@index([scheduledAt])
 }
 
+/// Single shared Google account used to create Meet-enabled Calendar events for
+/// every LiveClass (admin connects it once in Settings). Always the one row with
+/// id "singleton" — enforced in app code via upsert, not a DB constraint.
+model GoogleMeetConnection {
+  id           String   @id @default("singleton")
+  accountEmail String
+  accessToken  String
+  refreshToken String
+  expiresAt    DateTime
+  connectedAt  DateTime @default(now())
+}
+
 model Recording {
   id          String    @id @default(cuid())
   liveClassId String
@@ -648,6 +660,7 @@ model LessonProgress {
   student      User       @relation(fields: [studentId], references: [id], onDelete: Cascade)
   completed    Boolean    @default(false)
   completedAt  DateTime?
+  lastPositionSec Int? // VIDEO lessons only — resume playback position
 
   @@unique([enrollmentId, lessonId])
   @@index([lessonId])

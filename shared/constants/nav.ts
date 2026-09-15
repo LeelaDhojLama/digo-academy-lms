@@ -25,6 +25,7 @@ export const ADMIN_NAV_GROUPS: NavGroup[] = [
     items: [
       { label: 'Batches', href: '/admin/batches', icon: 'batches' },
       { label: 'Learning plans', href: '/admin/learning-plans', icon: 'plans' },
+      { label: 'Live classes', href: '/admin/live-classes', icon: 'live' },
     ],
   },
   {

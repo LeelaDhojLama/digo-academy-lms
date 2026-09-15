@@ -43,10 +43,27 @@ export async function getEnrolledCourse(courseId: string, studentId: string) {
   if (!course) return null;
 
   const progressRows = await db.lessonProgress.findMany({
-    where: { enrollmentId: enrollment.id, completed: true },
-    select: { lessonId: true },
+    where: { enrollmentId: enrollment.id },
+    select: { lessonId: true, completed: true, lastPositionSec: true },
   });
-  const completedSet = new Set(progressRows.map((p) => p.lessonId));
+  const completedSet = new Set(progressRows.filter((p) => p.completed).map((p) => p.lessonId));
+  const lastPositionByLesson = new Map(progressRows.map((p) => [p.lessonId, p.lastPositionSec]));
+
+  const quizIds = course.sections
+    .flatMap((s) => s.lessons.map((l) => l.quiz?.id))
+    .filter((id): id is string => Boolean(id));
+  const lastAttempts =
+    quizIds.length > 0
+      ? await db.quizAttempt.findMany({
+          where: { quizId: { in: quizIds }, studentId, submittedAt: { not: null } },
+          orderBy: { submittedAt: 'desc' },
+          select: { quizId: true, score: true, passed: true },
+        })
+      : [];
+  const lastAttemptByQuiz = new Map<string, { score: number | null; passed: boolean | null }>();
+  for (const a of lastAttempts) {
+    if (!lastAttemptByQuiz.has(a.quizId)) lastAttemptByQuiz.set(a.quizId, a);
+  }
 
   const sections = await Promise.all(
     course.sections.map(async (section) => ({
@@ -59,6 +76,7 @@ export async function getEnrolledCourse(courseId: string, studentId: string) {
           type: lesson.type as string,
           videoUrl: lesson.type === 'VIDEO' ? await sign(lesson.videoKey) : null,
           videoDurationSec: lesson.videoDurationSec,
+          lastPositionSec: lesson.type === 'VIDEO' ? (lastPositionByLesson.get(lesson.id) ?? null) : null,
           noteContent: lesson.type === 'NOTE' ? lesson.noteContent : null,
           notePdfUrl: lesson.type === 'NOTE' ? await sign(lesson.notePdfKey) : null,
           quiz: lesson.quiz
@@ -67,6 +85,7 @@ export async function getEnrolledCourse(courseId: string, studentId: string) {
                 description: lesson.quiz.description,
                 passingScore: lesson.quiz.passingScore,
                 questionCount: lesson.quiz._count.questions,
+                lastAttempt: lastAttemptByQuiz.get(lesson.quiz.id) ?? null,
               }
             : null,
           completed: completedSet.has(lesson.id),

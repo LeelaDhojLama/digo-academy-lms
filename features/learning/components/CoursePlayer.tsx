@@ -15,6 +15,8 @@ import { toast } from 'sonner';
 
 import type { EnrolledCourse, EnrolledLesson } from '@/features/learning/server/data';
 import { setLessonProgress } from '@/features/learning/server/actions';
+import { QuizPlayer } from '@/features/learning/components/QuizPlayer';
+import { VideoPlayer } from '@/features/learning/components/VideoPlayer';
 import { RichTextContent } from '@/shared/components/dashboard/RichTextContent';
 import { Button } from '@/shared/components/ui/button';
 import { cn } from '@/shared/utils/cn';
@@ -180,7 +182,18 @@ export function CoursePlayer({ data }: { data: EnrolledCourse }) {
               </Button>
             </div>
 
-            <LessonBody lesson={active} />
+            <LessonBody
+              key={active.id}
+              lesson={active}
+              completed={completedIds.has(active.id)}
+              onAutoCompleted={() =>
+                setCompletedIds((prev) => {
+                  const copy = new Set(prev);
+                  copy.add(active.id);
+                  return copy;
+                })
+              }
+            />
           </>
         )}
       </div>
@@ -188,22 +201,22 @@ export function CoursePlayer({ data }: { data: EnrolledCourse }) {
   );
 }
 
-function LessonBody({ lesson }: { lesson: EnrolledLesson }) {
+function LessonBody({
+  lesson,
+  completed,
+  onAutoCompleted,
+}: {
+  lesson: EnrolledLesson;
+  completed: boolean;
+  onAutoCompleted: () => void;
+}) {
   if (lesson.type === 'VIDEO') {
     if (!lesson.videoUrl) {
       return (
         <Placeholder icon={PlayCircle} text="The recorded video isn’t available yet." />
       );
     }
-    return (
-      // eslint-disable-next-line jsx-a11y/media-has-caption -- user-uploaded lesson videos have no caption track yet
-      <video
-        controls
-        controlsList="nodownload"
-        src={lesson.videoUrl}
-        className="aspect-video w-full rounded-2xl bg-black shadow-sm ring-1 ring-border/60"
-      />
-    );
+    return <VideoPlayer lesson={lesson} completed={completed} onCompleted={onAutoCompleted} />;
   }
 
   if (lesson.type === 'NOTE') {
@@ -244,30 +257,10 @@ function LessonBody({ lesson }: { lesson: EnrolledLesson }) {
   }
 
   if (lesson.type === 'QUIZ') {
-    return (
-      <div className="rounded-2xl bg-card p-6 shadow-sm ring-1 ring-border/60">
-        <div className="flex items-center gap-2 text-primary">
-          <HelpCircle className="size-5" />
-          <h3 className="font-heading text-lg font-semibold text-foreground">
-            {lesson.quiz?.title ?? lesson.title}
-          </h3>
-        </div>
-        {lesson.quiz?.description ? (
-          <p className="mt-2 text-sm text-muted-foreground">{lesson.quiz.description}</p>
-        ) : null}
-        <div className="mt-4 flex flex-wrap gap-2 text-sm">
-          <span className="rounded-full bg-muted px-3 py-1 font-medium">
-            {lesson.quiz?.questionCount ?? 0} questions
-          </span>
-          <span className="rounded-full bg-muted px-3 py-1 font-medium">
-            Pass mark {lesson.quiz?.passingScore ?? 0}%
-          </span>
-        </div>
-        <Button className="mt-5" disabled>
-          Start quiz (coming soon)
-        </Button>
-      </div>
-    );
+    if (!lesson.quiz) {
+      return <Placeholder icon={HelpCircle} text="This quiz isn’t available yet." />;
+    }
+    return <QuizPlayer lesson={lesson} onPassed={onAutoCompleted} />;
   }
 
   return <Placeholder icon={ClipboardList} text="Assignment submissions are coming soon." />;
