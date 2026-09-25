@@ -569,15 +569,31 @@ model Batch {
   course       Course    @relation(fields: [courseId], references: [id], onDelete: Cascade)
   instructorId String?
   instructor   User?     @relation("BatchInstructor", fields: [instructorId], references: [id], onDelete: SetNull)
-  startDate    DateTime?
+  startDate    DateTime? // also anchors the weekly recurring live class's day/time
   endDate      DateTime?
   capacity     Int?
+  meetLink      String? // Google Meet URL for the batch's recurring weekly class
+  googleEventId String? // Google Calendar recurring event id, for updates/cleanup
   createdAt    DateTime  @default(now())
 
   enrollments Enrollment[]
   liveClasses LiveClass[]
+  videos      BatchVideo[]
 
   @@index([courseId])
+}
+
+/// A recorded class video, manually uploaded after a live session and attached
+/// directly to the batch (not to an individual scheduled session).
+model BatchVideo {
+  id        String   @id @default(cuid())
+  batchId   String
+  batch     Batch    @relation(fields: [batchId], references: [id], onDelete: Cascade)
+  title     String
+  videoKey  String // S3 key
+  createdAt DateTime @default(now())
+
+  @@index([batchId])
 }
 
 model LearningPlan {

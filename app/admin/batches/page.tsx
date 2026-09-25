@@ -28,6 +28,7 @@ export default async function AdminBatchesPage() {
     startDate: b.startDate?.toISOString() ?? null,
     endDate: b.endDate?.toISOString() ?? null,
     capacity: b.capacity,
+    meetLink: b.meetLink,
     enrollmentCount: b._count.enrollments,
     liveClassCount: b._count.liveClasses,
   }));

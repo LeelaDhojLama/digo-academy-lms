@@ -36,6 +36,14 @@ export type CreateBatchInput = z.input<typeof createBatchSchema>;
 export const updateBatchSchema = createBatchSchema.extend({ id: z.string().min(1) });
 export type UpdateBatchInput = z.input<typeof updateBatchSchema>;
 
+/** Instructor-facing: only the class schedule (drives the recurring Meet link). */
+export const updateBatchScheduleSchema = z.object({
+  id: z.string().min(1),
+  startDate: optionalDate,
+  endDate: optionalDate,
+});
+export type UpdateBatchScheduleInput = z.input<typeof updateBatchScheduleSchema>;
+
 const learningPlanName = z
   .string()
   .trim()

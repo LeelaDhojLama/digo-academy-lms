@@ -5,8 +5,10 @@ import {
   getStudentEnrollmentCount,
   getStudentOpenInquiryCount,
 } from '@/features/enrollment/server/data';
+import { getStudentUpcomingBatches } from '@/features/live/server/data';
 import { getWishlistCount } from '@/features/wishlist/server/data';
 import { requireRole } from '@/lib/auth/session';
+import { NextLiveClassCard } from '@/shared/components/dashboard/NextLiveClassCard';
 import { PageHeader } from '@/shared/components/dashboard/PageHeader';
 import { WidgetCard } from '@/shared/components/dashboard/WidgetCard';
 import { Button } from '@/shared/components/ui/button';
@@ -15,10 +17,11 @@ import { ROLES } from '@/shared/constants/roles';
 export default async function StudentDashboardPage() {
   const session = await requireRole(ROLES.STUDENT);
 
-  const [enrolled, wishlist, openInquiries] = await Promise.all([
+  const [enrolled, wishlist, openInquiries, { featured: nextLiveClass }] = await Promise.all([
     getStudentEnrollmentCount(session.user.id),
     getWishlistCount(session.user.id),
     getStudentOpenInquiryCount(session.user.id),
+    getStudentUpcomingBatches(session.user.id),
   ]);
 
   return (
@@ -30,6 +33,16 @@ export default async function StudentDashboardPage() {
           <Button nativeButton={false} render={<Link href="/student/courses">Browse courses</Link>} />
         }
       />
+
+      {nextLiveClass?.nextOccurrence && (
+        <NextLiveClassCard
+          batchName={nextLiveClass.name}
+          courseTitle={nextLiveClass.courseTitle}
+          meetLink={nextLiveClass.meetLink}
+          nextOccurrence={nextLiveClass.nextOccurrence}
+          isLive={nextLiveClass.isLive}
+        />
+      )}
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <Link href="/student/courses" className="block">

@@ -25,7 +25,6 @@ export const ADMIN_NAV_GROUPS: NavGroup[] = [
     items: [
       { label: 'Batches', href: '/admin/batches', icon: 'batches' },
       { label: 'Learning plans', href: '/admin/learning-plans', icon: 'plans' },
-      { label: 'Live classes', href: '/admin/live-classes', icon: 'live' },
     ],
   },
   {
@@ -48,7 +47,10 @@ export const INSTRUCTOR_NAV_GROUPS: NavGroup[] = [
   { items: [{ label: 'Dashboard', href: '/instructor', icon: 'dashboard' }] },
   {
     label: 'Teaching',
-    items: [{ label: 'Courses', href: '/instructor/courses', icon: 'courses' }],
+    items: [
+      { label: 'Courses', href: '/instructor/courses', icon: 'courses' },
+      { label: 'My batches', href: '/instructor/batches', icon: 'batches' },
+    ],
   },
   {
     label: 'Account',

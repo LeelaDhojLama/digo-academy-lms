@@ -177,6 +177,78 @@ export async function createMeetEvent(input: MeetEventInput): Promise<MeetEventR
   return { meetLink, googleEventId: data.id };
 }
 
+/** UTC basic format Google's RRULE UNTIL expects, e.g. "20260921T000000Z". */
+function toRRuleUntil(date: Date): string {
+  return date.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+}
+
+export interface RecurringMeetEventInput extends MeetEventInput {
+  /** Bound for the weekly recurrence; omit for an indefinite weekly series. */
+  untilDate?: Date | null;
+}
+
+/**
+ * Create a weekly recurring Calendar event (day/time taken from `startTime`,
+ * bounded by `untilDate` if given). One Meet link is generated for the whole
+ * series and stays the same for every occurrence — used for a batch's regular
+ * class slot, as opposed to `createMeetEvent`'s one-off sessions.
+ */
+export async function createRecurringMeetEvent(
+  input: RecurringMeetEventInput
+): Promise<MeetEventResult> {
+  const auth = await getAuthorizedClient();
+  const calendar = google.calendar({ version: 'v3', auth });
+  const endTime = new Date(input.startTime.getTime() + input.durationMin * 60_000);
+  const recurrence = `RRULE:FREQ=WEEKLY${input.untilDate ? `;UNTIL=${toRRuleUntil(input.untilDate)}` : ''}`;
+
+  const { data } = await calendar.events.insert({
+    calendarId: 'primary',
+    conferenceDataVersion: 1,
+    requestBody: {
+      summary: input.title,
+      description: input.description ?? undefined,
+      start: { dateTime: input.startTime.toISOString() },
+      end: { dateTime: endTime.toISOString() },
+      recurrence: [recurrence],
+      conferenceData: {
+        createRequest: {
+          requestId: randomUUID(),
+          conferenceSolutionKey: { type: 'hangoutsMeet' },
+        },
+      },
+    },
+  });
+
+  const meetLink = data.hangoutLink;
+  if (!meetLink || !data.id) {
+    throw new Error('Google did not return a Meet link for this event.');
+  }
+  return { meetLink, googleEventId: data.id };
+}
+
+/** Update a recurring series' time/title/description/end bound (Meet link unchanged). */
+export async function updateRecurringMeetEvent(
+  googleEventId: string,
+  input: RecurringMeetEventInput
+): Promise<void> {
+  const auth = await getAuthorizedClient();
+  const calendar = google.calendar({ version: 'v3', auth });
+  const endTime = new Date(input.startTime.getTime() + input.durationMin * 60_000);
+  const recurrence = `RRULE:FREQ=WEEKLY${input.untilDate ? `;UNTIL=${toRRuleUntil(input.untilDate)}` : ''}`;
+
+  await calendar.events.patch({
+    calendarId: 'primary',
+    eventId: googleEventId,
+    requestBody: {
+      summary: input.title,
+      description: input.description ?? undefined,
+      start: { dateTime: input.startTime.toISOString() },
+      end: { dateTime: endTime.toISOString() },
+      recurrence: [recurrence],
+    },
+  });
+}
+
 /** Update an existing event's time/title/description (Meet link is unchanged). */
 export async function updateMeetEvent(
   googleEventId: string,

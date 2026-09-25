@@ -13,7 +13,9 @@ import {
 import Link from 'next/link';
 
 import { getAdminOverview } from '@/features/admin/server/overview';
+import { getNextLiveClassPlatformWide } from '@/features/cohorts/server/data';
 import { requireRole } from '@/lib/auth/session';
+import { NextLiveClassCard } from '@/shared/components/dashboard/NextLiveClassCard';
 import { PageHeader } from '@/shared/components/dashboard/PageHeader';
 import { Panel } from '@/shared/components/dashboard/Panel';
 import { WidgetCard } from '@/shared/components/dashboard/WidgetCard';
@@ -32,7 +34,10 @@ const QUICK_ACTIONS = [
 
 export default async function AdminDashboardPage() {
   await requireRole(ROLES.ADMIN);
-  const overview = await getAdminOverview();
+  const [overview, nextLiveClass] = await Promise.all([
+    getAdminOverview(),
+    getNextLiveClassPlatformWide(),
+  ]);
 
   const attention = [
     {
@@ -101,6 +106,17 @@ export default async function AdminDashboardPage() {
           accent="slate"
         />
       </div>
+
+      {nextLiveClass && (
+        <NextLiveClassCard
+          batchName={nextLiveClass.batchName}
+          courseTitle={nextLiveClass.courseTitle}
+          meetLink={nextLiveClass.meetLink}
+          nextOccurrence={nextLiveClass.nextOccurrence}
+          isLive={nextLiveClass.isLive}
+          manageHref={`/admin/batches/${nextLiveClass.batchId}`}
+        />
+      )}
 
       <div className="grid gap-6 lg:grid-cols-3">
         <Panel className="lg:col-span-2">

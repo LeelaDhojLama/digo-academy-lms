@@ -1,16 +1,18 @@
 'use client';
 
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState, useTransition } from 'react';
 import { toast } from 'sonner';
 
-import { createBatch, deleteBatch, updateBatch } from '@/features/cohorts/server/actions';
+import { createBatch, deleteBatch } from '@/features/cohorts/server/actions';
 import { createBatchSchema } from '@/features/cohorts/schemas';
 import { Badge } from '@/shared/components/ui/badge';
-import { Button } from '@/shared/components/ui/button';
+import { Button, buttonVariants } from '@/shared/components/ui/button';
 import { Field, FieldError, FieldLabel } from '@/shared/components/ui/field';
 import { Input } from '@/shared/components/ui/input';
 import { useConfirm } from '@/shared/hooks/use-confirm';
+import { cn } from '@/shared/utils/cn';
 import { firstFieldErrors } from '@/shared/utils/zod-errors';
 
 export interface BatchRow {
@@ -23,6 +25,7 @@ export interface BatchRow {
   startDate: string | null;
   endDate: string | null;
   capacity: number | null;
+  meetLink: string | null;
   enrollmentCount: number;
   liveClassCount: number;
 }
@@ -53,17 +56,12 @@ const emptyForm: FormValues = {
   capacity: '',
 };
 
-function toDateInput(iso: string | null): string {
-  return iso ? iso.slice(0, 10) : '';
-}
-
 function BatchForm({
   courses,
   instructors,
   values,
   onChange,
   onSubmit,
-  onCancel,
   submitLabel,
   pending,
   errors = {},
@@ -73,7 +71,6 @@ function BatchForm({
   values: FormValues;
   onChange: (values: FormValues) => void;
   onSubmit: () => void;
-  onCancel?: () => void;
   submitLabel: string;
   pending: boolean;
   errors?: Partial<Record<keyof FormValues, string>>;
@@ -124,15 +121,15 @@ function BatchForm({
         </select>
       </Field>
       <Field>
-        <FieldLabel>Start date</FieldLabel>
+        <FieldLabel>First class date &amp; time</FieldLabel>
         <Input
-          type="date"
+          type="datetime-local"
           value={values.startDate}
           onChange={(e) => set({ startDate: e.target.value })}
         />
       </Field>
       <Field>
-        <FieldLabel>End date</FieldLabel>
+        <FieldLabel>Class end date</FieldLabel>
         <Input
           type="date"
           value={values.endDate}
@@ -153,11 +150,6 @@ function BatchForm({
         <Button type="button" onClick={onSubmit} disabled={pending}>
           {pending ? 'Saving…' : submitLabel}
         </Button>
-        {onCancel && (
-          <Button type="button" variant="ghost" onClick={onCancel} disabled={pending}>
-            Cancel
-          </Button>
-        )}
       </div>
     </div>
   );
@@ -174,18 +166,11 @@ export function BatchManager({
 }) {
   const router = useRouter();
   const confirm = useConfirm();
-  // Each action gets its own pending flag — sharing one `useTransition` across
-  // create/edit/delete made the idle "Add a batch" card flash into "Saving…"
-  // whenever any row was saved or deleted, looking like it had been re-triggered.
   const [isCreating, startCreate] = useTransition();
-  const [isSaving, startSave] = useTransition();
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [isDeleting, startDelete] = useTransition();
   const [createValues, setCreateValues] = useState<FormValues>(emptyForm);
   const [createErrors, setCreateErrors] = useState<Partial<Record<keyof FormValues, string>>>({});
-  const [editingId, setEditingId] = useState<string | null>(null);
-  const [editValues, setEditValues] = useState<FormValues>(emptyForm);
-  const [editErrors, setEditErrors] = useState<Partial<Record<keyof FormValues, string>>>({});
 
   function add() {
     const parsed = createBatchSchema.safeParse(createValues);
@@ -202,38 +187,6 @@ export function BatchManager({
       }
       toast.success(`Batch "${createValues.name}" created.`);
       setCreateValues(emptyForm);
-      router.refresh();
-    });
-  }
-
-  function startEdit(row: BatchRow) {
-    setEditingId(row.id);
-    setEditErrors({});
-    setEditValues({
-      name: row.name,
-      courseId: row.courseId,
-      instructorId: row.instructorId ?? '',
-      startDate: toDateInput(row.startDate),
-      endDate: toDateInput(row.endDate),
-      capacity: row.capacity != null ? String(row.capacity) : '',
-    });
-  }
-
-  function saveEdit(id: string) {
-    const parsed = createBatchSchema.safeParse(editValues);
-    if (!parsed.success) {
-      setEditErrors(firstFieldErrors(parsed.error.flatten().fieldErrors));
-      return;
-    }
-    setEditErrors({});
-    startSave(async () => {
-      const result = await updateBatch({ id, ...editValues });
-      if (!result.ok) {
-        toast.error(result.error ?? 'Could not update batch.');
-        return;
-      }
-      toast.success(`Batch "${editValues.name}" updated.`);
-      setEditingId(null);
       router.refresh();
     });
   }
@@ -286,25 +239,7 @@ export function BatchManager({
           {batches.map((row) => {
             const rowDeleting = isDeleting && deletingId === row.id;
             return (
-            <li key={row.id} className="rounded-lg border">
-              {editingId === row.id ? (
-                <div className="p-4">
-                  <BatchForm
-                    courses={courses}
-                    instructors={instructors}
-                    values={editValues}
-                    onChange={(v) => {
-                      setEditValues(v);
-                      setEditErrors({});
-                    }}
-                    onSubmit={() => saveEdit(row.id)}
-                    onCancel={() => setEditingId(null)}
-                    submitLabel="Save"
-                    pending={isSaving}
-                    errors={editErrors}
-                  />
-                </div>
-              ) : (
+              <li key={row.id} className="rounded-lg border">
                 <div className="flex items-center justify-between gap-3 px-4 py-3">
                   <div className="min-w-0">
                     <div className="flex items-center gap-2">
@@ -316,18 +251,25 @@ export function BatchManager({
                     <p className="text-xs text-muted-foreground">
                       {row.courseTitle} · {row.instructorName ?? 'No instructor'}
                       {row.capacity != null && ` · cap ${row.capacity}`}
-                      {row.liveClassCount > 0 && ` · ${row.liveClassCount} live classes`}
                     </p>
                   </div>
                   <div className="flex items-center gap-1">
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      onClick={() => startEdit(row)}
-                      disabled={rowDeleting}
+                    {row.meetLink && (
+                      <a
+                        href={row.meetLink}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className={cn(buttonVariants({ size: 'sm', variant: 'outline' }))}
+                      >
+                        Join
+                      </a>
+                    )}
+                    <Link
+                      href={`/admin/batches/${row.id}`}
+                      className={cn(buttonVariants({ size: 'sm', variant: 'ghost' }))}
                     >
                       Edit
-                    </Button>
+                    </Link>
                     <Button
                       size="sm"
                       variant="destructive"
@@ -338,8 +280,7 @@ export function BatchManager({
                     </Button>
                   </div>
                 </div>
-              )}
-            </li>
+              </li>
             );
           })}
         </ul>
